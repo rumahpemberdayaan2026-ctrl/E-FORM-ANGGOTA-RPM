@@ -134,9 +134,11 @@
                     <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs flex-shrink-0">2</span>
                     <span class="truncate">Bayar QRIS</span>
                 </button>
-                <button onclick="navigateStep(3)" id="stepBtn3" class="flex items-center justify-center sm:justify-start gap-2.5 p-2.5 rounded-xl border-2 border-slate-200 bg-white text-slate-500 font-semibold text-xs sm:text-sm transition">
-                    <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs flex-shrink-0">3</span>
-                    <span class="truncate">KTA & PDF</span>
+                <button onclick="navigateStep(3)" id="stepBtn3" disabled title="Selesaikan & verifikasi pembayaran QRIS terlebih dahulu untuk membuka KTA" class="flex items-center justify-center sm:justify-start gap-2.5 p-2.5 rounded-xl border-2 border-slate-200 bg-slate-100 text-slate-400 font-semibold text-xs sm:text-sm transition cursor-not-allowed opacity-75">
+                    <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs flex-shrink-0">
+                        <i id="step3LockIcon" class="fa-solid fa-lock text-[10px]"></i>
+                    </span>
+                    <span class="truncate">KTA Otomatis</span>
                 </button>
             </div>
         </div>
@@ -499,11 +501,60 @@
                         </button>
                     </div>
 
-                    <!-- Tombol Konfirmasi Simulasi -->
+                    <!-- Verifikasi Bukti Transfer QRIS Wajib Sebelum KTA Terbuka -->
+                    <div class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 sm:p-5 mb-5 text-left space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-2.5">
+                            <div class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-[#0c3b6e] text-white flex items-center justify-center text-xs font-bold">
+                                    <i class="fa-solid fa-shield-halved text-[11px]"></i>
+                                </span>
+                                <div>
+                                    <h4 class="text-xs font-extrabold text-slate-800 uppercase">Verifikasi Pembayaran QRIS (Wajib)</h4>
+                                    <p class="text-[11px] text-slate-500">KTA Otomatis terkunci hingga bukti bayar diunggah & terverifikasi</p>
+                                </div>
+                            </div>
+                            <span id="qrisLockBadge" class="text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-1 rounded-full flex items-center gap-1">
+                                <i class="fa-solid fa-lock"></i> KTA Terkunci
+                            </span>
+                        </div>
+
+                        <!-- Langkah A: Upload Bukti Transfer -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                                1. Unggah Bukti Transfer / Screenshot QRIS <span class="text-red-500">*</span>
+                            </label>
+                            <div class="flex flex-col sm:flex-row items-center gap-3">
+                                <label class="w-full sm:flex-1 cursor-pointer border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-white rounded-xl p-3 text-center transition flex flex-col items-center justify-center gap-1">
+                                    <i class="fa-solid fa-receipt text-xl text-emerald-600"></i>
+                                    <span id="paymentProofFileName" class="text-xs font-semibold text-slate-700">Pilih Screenshot / Struk QRIS (JPG, PNG, WEBP)</span>
+                                    <span class="text-[10px] text-slate-400">Maksimal ukuran file 5MB</span>
+                                    <input type="file" id="inPaymentProof" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="handlePaymentProofUpload(event)">
+                                </label>
+
+                                <!-- Pratinjau Bukti Transfer -->
+                                <div id="paymentProofPreviewWrap" class="hidden relative w-24 h-24 rounded-xl border-2 border-emerald-500 overflow-hidden bg-white shadow-sm flex-shrink-0">
+                                    <img id="paymentProofPreviewImg" src="" alt="Bukti Transfer QRIS" class="w-full h-full object-cover">
+                                    <button type="button" onclick="clearPaymentProof()" title="Hapus Bukti Transfer" class="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center shadow">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Langkah B: Centang Konfirmasi Kesesuaian Nominal -->
+                        <label class="flex items-start gap-2.5 p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-emerald-500 transition">
+                            <input type="checkbox" id="chkConfirmNominal" onchange="validateQrisVerificationState()" class="mt-0.5 w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                            <span class="text-xs text-slate-700 leading-relaxed font-medium">
+                                Saya menyatakan telah melakukan pembayaran QRIS ke <strong>ARJUNAJJAY - TELECOMMUNICATION</strong> sesuai nominal tagihan <strong id="qrisCheckboxNominal" class="text-emerald-700">Rp 150.000,-</strong> (minimal Rp 150.000).
+                            </span>
+                        </label>
+                    </div>
+
+                    <!-- Tombol Konfirmasi Pelunasan -->
                     <div class="w-full space-y-3">
-                        <button onclick="confirmQrisPayment()" id="btnConfirmPayment" class="w-full py-3.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-circle-check text-lg"></i>
-                            <span>Konfirmasi Sudah Bayar (Lunas)</span>
+                        <button onclick="confirmQrisPayment()" id="btnConfirmPayment" disabled class="w-full py-3.5 px-6 rounded-xl bg-slate-300 text-slate-500 font-bold text-sm transition flex items-center justify-center gap-2 cursor-not-allowed">
+                            <i class="fa-solid fa-lock text-base"></i>
+                            <span>Lengkapi Bukti Bayar untuk Verifikasi Lunas</span>
                         </button>
                         <button onclick="navigateStep(1)" class="w-full py-2.5 px-4 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 font-semibold text-xs transition">
                             <i class="fa-solid fa-arrow-left mr-1"></i> Ubah Data Formulir
@@ -1051,6 +1102,8 @@
         const appState = {
             currentStep: 1,
             isPaid: false,
+            paymentProofDataUrl: '',
+            paidSnapshot: '',
             memberNo: 'RPM/' + new Date().getFullYear() + '/' + String(Math.floor(1 + Math.random() * 899)).padStart(3, '0'),
             invoiceNo: 'INV-RPM-' + Math.floor(100000 + Math.random() * 900000),
             photoDataUrl: '',
@@ -1082,15 +1135,105 @@
 
             // Set foto avatar default SVG
             useSampleAvatar(false);
+
+            // Kunci akses KTA sejak awal dan pasang pemantau perubahan formulir
+            updateKtaLockState();
+            attachFormChangeResetListeners();
         };
 
-        function syncFormNumberLive() {
-            const val = document.getElementById('inNoFormulir').value.trim() || appState.memberNo;
-            appState.memberNo = val;
-            document.getElementById('badgeMemberNo').innerText = val;
-            document.getElementById('cardNoKta').innerText = val;
-            document.getElementById('pdfNoFormulir').innerText = val;
-            document.getElementById('qrisNoFormulir').innerText = val;
+        function attachFormChangeResetListeners() {
+            const formEl = document.getElementById('rpmForm');
+            if (!formEl) return;
+            const inputs = formEl.querySelectorAll('input, select, textarea');
+            inputs.forEach(el => {
+                el.addEventListener('input', handleFormEditedAfterPaid);
+                el.addEventListener('change', handleFormEditedAfterPaid);
+            });
+        }
+
+        function handleFormEditedAfterPaid() {
+            if (!appState.isPaid) return;
+            resetPaymentVerificationStatus('Data formulir atau nominal berubah. Status pembayaran di-reset dan akses KTA dikunci kembali hingga verifikasi ulang.');
+        }
+
+        function resetPaymentVerificationStatus(reasonMessage) {
+            appState.isPaid = false;
+            appState.paidSnapshot = '';
+            appState.paymentProofDataUrl = '';
+            appState.invoiceNo = 'INV-RPM-' + Math.floor(100000 + Math.random() * 900000);
+
+            // Reset input bukti bayar & checkbox konfirmasi di Tahap 2
+            const proofInput = document.getElementById('inPaymentProof');
+            if (proofInput) proofInput.value = '';
+            const proofWrap = document.getElementById('paymentProofPreviewWrap');
+            if (proofWrap) proofWrap.classList.add('hidden');
+            const proofLabel = document.getElementById('paymentProofFileName');
+            if (proofLabel) proofLabel.innerText = 'Pilih Screenshot / Struk QRIS (JPG, PNG, WEBP)';
+            const chkConfirm = document.getElementById('chkConfirmNominal');
+            if (chkConfirm) chkConfirm.checked = false;
+
+            updateKtaLockState();
+            validateQrisVerificationState();
+
+            if (reasonMessage) {
+                showToast(reasonMessage, 'error');
+            }
+        }
+
+        function updateKtaLockState() {
+            const btn3 = document.getElementById('stepBtn3');
+            const lockBadge = document.getElementById('qrisLockBadge');
+            if (!btn3) return;
+
+            if (appState.isPaid) {
+                btn3.disabled = false;
+                btn3.title = 'Lihat & Unduh Kartu Tanda Anggota (KTA) Otomatis';
+                btn3.classList.remove('cursor-not-allowed', 'opacity-75', 'bg-slate-100', 'text-slate-400');
+                btn3.classList.add('cursor-pointer');
+                if (lockBadge) {
+                    lockBadge.className = 'text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-full flex items-center gap-1';
+                    lockBadge.innerHTML = '<i class="fa-solid fa-lock-open"></i> LUNAS - KTA Aktif';
+                }
+            } else {
+                btn3.disabled = true;
+                btn3.title = 'Selesaikan & verifikasi pembayaran QRIS terlebih dahulu untuk membuka KTA';
+                btn3.className = 'flex items-center justify-center sm:justify-start gap-2.5 p-2.5 rounded-xl border-2 border-slate-200 bg-slate-100 text-slate-400 font-semibold text-xs sm:text-sm transition cursor-not-allowed opacity-75';
+                const badge = btn3.querySelector('span:first-child');
+                if (badge) {
+                    badge.className = 'w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs flex-shrink-0';
+                    badge.innerHTML = '<i id="step3LockIcon" class="fa-solid fa-lock text-[10px]"></i>';
+                }
+                if (lockBadge) {
+                    lockBadge.className = 'text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-1 rounded-full flex items-center gap-1';
+                    lockBadge.innerHTML = '<i class="fa-solid fa-lock"></i> KTA Terkunci';
+                }
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const styles = {
+                success: 'bg-emerald-700 text-white border-emerald-500',
+                error: 'bg-red-700 text-white border-red-500',
+                info: 'bg-slate-900 text-white border-slate-700'
+            };
+            const icons = {
+                success: 'fa-circle-check',
+                error: 'fa-triangle-exclamation',
+                info: 'fa-circle-info'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-lg text-xs font-semibold max-w-sm transition-all duration-300 ${styles[type] || styles.info}`;
+            toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info} text-sm flex-shrink-0"></i><span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-4');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
         }
 
         function regenerateFormNumber() {
@@ -1108,8 +1251,10 @@
                 return;
             }
             if (step === 3 && !appState.isPaid) {
-                showToast('Silakan selesaikan pembayaran QRIS terlebih dahulu untuk menerbitkan KTA.', 'error');
-                if (collectFormData(true)) navigateStep(2);
+                showToast('Akses KTA terkunci! Silakan unggah bukti bayar QRIS dan konfirmasi pelunasan terlebih dahulu.', 'error');
+                if (collectFormData(true) && appState.currentStep !== 2) {
+                    navigateStep(2);
+                }
                 return;
             }
 
@@ -1124,6 +1269,15 @@
             [1, 2, 3].forEach(num => {
                 const btn = document.getElementById('stepBtn' + num);
                 const badge = btn.querySelector('span:first-child');
+                if (num === 3 && !appState.isPaid) {
+                    btn.className = 'flex items-center justify-center sm:justify-start gap-2.5 p-2.5 rounded-xl border-2 border-slate-200 bg-slate-100 text-slate-400 font-semibold text-xs sm:text-sm transition cursor-not-allowed opacity-75';
+                    badge.className = 'w-6 h-6 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs flex-shrink-0';
+                    badge.innerHTML = '<i class="fa-solid fa-lock text-[10px]"></i>';
+                    return;
+                }
+                if (num === 3 && appState.isPaid) {
+                    badge.innerText = '3';
+                }
                 if (num === step) {
                     btn.className = 'flex items-center justify-center sm:justify-start gap-2.5 p-2.5 rounded-xl border-2 border-emerald-600 bg-emerald-50/70 text-emerald-800 font-bold text-xs sm:text-sm transition';
                     badge.className = 'w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs flex-shrink-0';
@@ -1159,6 +1313,7 @@
                 preview.src = appState.photoDataUrl;
                 preview.classList.remove('hidden');
                 document.getElementById('fotoPlaceholder').classList.add('hidden');
+                handleFormEditedAfterPaid();
                 showToast('Pas foto berhasil diunggah!', 'success');
             };
             reader.readAsDataURL(file);
@@ -1196,6 +1351,7 @@
             document.getElementById('inCatatan').value = 'Kaos lengan panjang jika tersedia';
             document.getElementById('inNominal').value = '150000';
             useSampleAvatar(false);
+            handleFormEditedAfterPaid();
             showToast('Data contoh berhasil diisikan ke formulir!', 'info');
         }
 
@@ -1291,7 +1447,7 @@
             // Generate QR Code Verifikasi Anggota pada KTA Belakang
             new QRious({
                 element: document.getElementById('ktaMemberQrCanvas'),
-                value: `VERIFIKASI KTA RESMI RPM\nNo. KTA / Formulir: ${appState.memberNo}\nNama: ${d.nama}\nNIK: ${d.nik}\nDivisi: ${d.divisi}\nStatus: AKTIF & TERVERIFIKASI`,
+                value: `VERIFIKASI KTA RESMI RPM\nNo. KTA / Formulir: ${appState.memberNo}\nNama: ${d.nama}\nNIK: ${d.nik}\nDivisi: ${d.divisi}\nStatus: ${appState.isPaid ? 'LUNAS - TERVERIFIKASI' : 'BELUM LUNAS'}`,
                 size: 160,
                 background: '#ffffff',
                 foreground: '#092e57',
@@ -1335,10 +1491,12 @@
             if (!collectFormData(true)) return;
 
             const d = appState.data;
+            const nominalFormatted = 'Rp ' + d.nominal.toLocaleString('id-ID') + ',-';
             document.getElementById('qrisInvoice').innerText = appState.invoiceNo;
             document.getElementById('qrisNoFormulir').innerText = appState.memberNo;
             document.getElementById('qrisMemberName').innerText = d.nama;
-            document.getElementById('qrisAmountDisplay').innerText = 'Rp ' + d.nominal.toLocaleString('id-ID') + ',-';
+            document.getElementById('qrisAmountDisplay').innerText = nominalFormatted;
+            document.getElementById('qrisCheckboxNominal').innerText = nominalFormatted;
 
             // Generate Payload QRIS Resmi Merchant ARJUNAJJAY - TELECOMMUNICATION (NMID: ID1021113879162)
             const qrisPayload = `00020101021226670016ID.CO.QRIS.WWW0118936009180215ID10211138791620303A0151440014ID.CO.GPN.WWW0215ID10211138791620303UMI5204481453033605406${d.nominal}5802ID5925ARJUNAJJAY TELECOMMUNICAT6006JEPARA62230115${appState.invoiceNo}6304`;
@@ -1351,9 +1509,70 @@
                 level: 'H'
             });
 
+            validateQrisVerificationState();
             startQrisCountdown(15 * 60);
             navigateStep(2);
-            showToast('Silakan scan kode QRIS ARJUNAJJAY - TELECOMMUNICATION untuk menyelesaikan pendaftaran.', 'info');
+            showToast('Silakan scan kode QRIS dan unggah bukti bayar untuk membuka KTA Otomatis.', 'info');
+        }
+
+        function handlePaymentProofUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                showToast('Format bukti bayar harus berupa JPG, PNG, atau WEBP.', 'error');
+                event.target.value = '';
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Ukuran bukti transfer maksimal 5MB.', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                appState.paymentProofDataUrl = e.target.result;
+                document.getElementById('paymentProofPreviewImg').src = appState.paymentProofDataUrl;
+                document.getElementById('paymentProofPreviewWrap').classList.remove('hidden');
+                document.getElementById('paymentProofFileName').innerText = file.name;
+                validateQrisVerificationState();
+                showToast('Bukti transfer QRIS berhasil dilampirkan.', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearPaymentProof() {
+            appState.paymentProofDataUrl = '';
+            document.getElementById('inPaymentProof').value = '';
+            document.getElementById('paymentProofPreviewWrap').classList.add('hidden');
+            document.getElementById('paymentProofFileName').innerText = 'Pilih Screenshot / Struk QRIS (JPG, PNG, WEBP)';
+            if (appState.isPaid) {
+                resetPaymentVerificationStatus('Bukti bayar dihapus. Akses KTA dikunci kembali.');
+            } else {
+                validateQrisVerificationState();
+            }
+        }
+
+        function validateQrisVerificationState() {
+            const btn = document.getElementById('btnConfirmPayment');
+            const chk = document.getElementById('chkConfirmNominal');
+            if (!btn || !chk) return;
+
+            const hasProof = Boolean(appState.paymentProofDataUrl);
+            const isChecked = chk.checked;
+            const isNominalValid = (appState.data.nominal || 0) >= 150000;
+
+            if (hasProof && isChecked && isNominalValid) {
+                btn.disabled = false;
+                btn.className = 'w-full py-3.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer';
+                btn.innerHTML = `<i class="fa-solid fa-circle-check text-lg"></i> <span>Konfirmasi Sudah Bayar (Lunas)</span>`;
+            } else {
+                btn.disabled = true;
+                btn.className = 'w-full py-3.5 px-6 rounded-xl bg-slate-300 text-slate-500 font-bold text-sm transition flex items-center justify-center gap-2 cursor-not-allowed';
+                btn.innerHTML = `<i class="fa-solid fa-lock text-base"></i> <span>${!hasProof ? 'Unggah Bukti Transfer QRIS Dahulu' : 'Centang Pernyataan Nominal Sesuai'}</span>`;
+            }
         }
 
         function handleCustomQrisUpload(event) {
@@ -1397,27 +1616,43 @@
         }
 
         function confirmQrisPayment() {
+            if (!appState.paymentProofDataUrl) {
+                showToast('Wajib mengunggah bukti transfer / screenshot pembayaran QRIS terlebih dahulu.', 'error');
+                return;
+            }
+            if (!document.getElementById('chkConfirmNominal').checked) {
+                showToast('Centang pernyataan konfirmasi kesesuaian nominal transfer terlebih dahulu.', 'error');
+                return;
+            }
+            if (!collectFormData(true)) return;
+
             const btn = document.getElementById('btnConfirmPayment');
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Memverifikasi Transaksi QRIS...</span>`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Memverifikasi Bukti & Transaksi QRIS...</span>`;
 
             setTimeout(() => {
                 if (countdownInterval) clearInterval(countdownInterval);
                 appState.isPaid = true;
+                appState.paidSnapshot = JSON.stringify(appState.data);
+                updateKtaLockState();
                 syncDataToTemplates();
 
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fa-solid fa-circle-check text-lg"></i> <span>Konfirmasi Sudah Bayar (Lunas)</span>`;
 
                 navigateStep(3);
-                showToast('Pembayaran QRIS Lunas! KTA Digital & Formulir PDF siap diunduh.', 'success');
-            }, 1100);
+                showToast('Pembayaran QRIS Lunas & Terverifikasi! Kunci KTA Otomatis telah dibuka.', 'success');
+            }, 1500);
         }
 
         // =========================================================================
         // 7. EKSPOR PDF & PNG RESOLUSI TINGGI (HTML2CANVAS + JSPDF)
         // =========================================================================
         async function downloadKtaPdf() {
+            if (!appState.isPaid) {
+                showToast('KTA terkunci. Selesaikan pembayaran QRIS terlebih dahulu.', 'error');
+                return;
+            }
             showToast('Menyiapkan PDF Kartu Tanda Anggota (Depan & Belakang)...', 'info');
             const { jsPDF } = window.jspdf;
 
@@ -1465,6 +1700,10 @@
         }
 
         async function downloadKtaPng() {
+            if (!appState.isPaid) {
+                showToast('KTA terkunci. Selesaikan pembayaran QRIS terlebih dahulu.', 'error');
+                return;
+            }
             showToast('Merender gambar KTA HD...', 'info');
             const captureEl = document.getElementById('ktaCaptureArea');
             const canvas = await html2canvas(captureEl, { scale: 3, useCORS: true, backgroundColor: '#f8fafc' });
