@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendaftaran Anggota - Rumah Pemberdayaan Masyarakat (RPM)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- html2pdf for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- qrious for QR Code generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <img src="Logo_Rumah_Pemberdayaan_Masyarakat__1_-removebg-preview(1).png" alt="Logo RPM" class="h-12 object-contain" onerror="this.src='https://placehold.co/150x50/16a34a/ffffff?text=RPM+Logo'">
+                <div>
+                    <h1 class="text-sm font-bold text-green-700 uppercase tracking-wide">Yayasan Rumah Pemberdayaan Masyarakat (RPM)</h1>
+                    <p class="text-xs text-slate-500">Kelet, Kecamatan Keling, Kabupaten Jepara, Jawa Tengah</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs bg-green-100 text-green-800 font-medium px-3 py-1 rounded-full"><i class="fa-solid fa-shield-check mr-1"></i> Sistem Pendaftaran Resmi</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-5xl mx-auto px-4 py-8">
+        
+        <!-- Tab Navigation -->
+        <div class="flex border-b border-slate-200 mb-6 no-print">
+            <button onclick="switchTab('form')" id="tab-form" class="py-3 px-6 font-semibold text-green-700 border-b-2 border-green-600 flex items-center gap-2 transition">
+                <i class="fa-solid fa-file-pen"></i> Formulir Pendaftaran
+            </button>
+            <button onclick="switchTab('qris')" id="tab-qris" class="py-3 px-6 font-semibold text-slate-500 hover:text-green-700 flex items-center gap-2 transition">
+                <i class="fa-solid fa-qrcode"></i> Pembayaran QRIS
+            </button>
+            <button onclick="switchTab('kta')" id="tab-kta" class="py-3 px-6 font-semibold text-slate-500 hover:text-green-700 flex items-center gap-2 transition">
+                <i class="fa-solid fa-id-card"></i> KTA Digital Otomatis
+            </button>
+        </div>
+
+        <!-- TAB 1: FORMULIR PENDAFTARAN -->
+        <section id="section-form" class="space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+                <div class="text-center mb-8 border-b pb-6">
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 uppercase">FORMULIR PENDAFTARAN KTA, KAOS KERAH DAN TOPI</h2>
+                    <p class="text-sm text-slate-500 mt-1">YAYASAN RUMAH PEMBERDAYAAN MASYARAKAT (RPM)</p>
+                </div>
+
+                <form id="registrationForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                    
+                    <!-- A. Data Anggota -->
+                    <div>
+                        <h3 class="text-sm font-bold text-green-700 uppercase bg-green-50 p-2.5 rounded-lg mb-4 border-l-4 border-green-600">A. Data Anggota</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Left inputs -->
+                            <div class="md:col-span-2 space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nama Lengkap</label>
+                                    <input type="text" id="nama" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="Masukkan nama lengkap beserta gelar">
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">NIK</label>
+                                        <input type="text" id="nik" required maxlength="16" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="3320xxxxxxxxxxxx">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tempat, Tgl. Lahir</label>
+                                        <input type="text" id="ttl" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="Jepara, 17 Agustus 1990">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Jenis Kelamin</label>
+                                        <select id="gender" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none">
+                                            <option value="Laki-laki">Laki-laki</option>
+                                            <option value="Perempuan">Perempuan</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Gol. Darah</label>
+                                        <select id="goldar" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none">
+                                            <option value="-">-</option>
+                                            <option value="A">A</option>
+                                            <option value="B">B</option>
+                                            <option value="AB">AB</option>
+                                            <option value="O">O</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Alamat Lengkap</label>
+                                    <textarea id="alamat" rows="2" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="Desa Kelet RT/RW, Kec. Keling, Kab. Jepara"></textarea>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">No. HP / WA</label>
+                                        <input type="text" id="phone" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="08xxxxxxxxxx">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Pekerjaan</label>
+                                        <input type="text" id="pekerjaan" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="Wartawan / Petani / Wiraswasta">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Bidang / Divisi</label>
+                                        <input type="text" id="divisi" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="Pemberdayaan / Media / Sosial">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pas Foto Upload -->
+                            <div class="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl p-4 bg-slate-50 text-center">
+                                <div id="previewContainer" class="w-32 h-44 bg-slate-200 rounded-lg flex items-center justify-center overflow-hidden mb-3 border relative shadow-inner">
+                                    <span id="placeholderText" class="text-xs text-slate-400 p-2 text-center">Pas Foto 3 x 4<br>(Max 2MB)</span>
+                                    <img id="imgPreview" class="w-full h-full object-cover hidden" alt="Pas Foto">
+                                </div>
+                                <label class="cursor-pointer bg-green-600 text-white text-xs px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition shadow-sm">
+                                    <i class="fa-solid fa-camera mr-1"></i> Upload Foto
+                                    <input type="file" id="fotoInput" accept="image/*" class="hidden" onchange="previewFoto(event)">
+                                </label>
+                                <span class="text-[10px] text-slate-400 mt-2">Format: JPG, PNG (Rasio 3:4)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- B. Permohonan -->
+                    <div>
+                        <h3 class="text-sm font-bold text-green-700 uppercase bg-green-50 p-2.5 rounded-lg mb-4 border-l-4 border-green-600">B. Permohonan (Centang yang diperlukan)</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <label class="flex items-center space-x-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                                <input type="checkbox" id="reqKta" checked class="w-4 h-4 text-green-600 rounded focus:ring-green-500">
+                                <span class="text-sm font-medium">Kartu Tanda Anggota (KTA)</span>
+                            </label>
+                            <label class="flex items-center space-x-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                                <input type="checkbox" id="reqKaos" checked class="w-4 h-4 text-green-600 rounded focus:ring-green-500">
+                                <span class="text-sm font-medium">Kaos Kerah</span>
+                            </label>
+                            <label class="flex items-center space-x-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                                <input type="checkbox" id="reqTopi" checked class="w-4 h-4 text-green-600 rounded focus:ring-green-500">
+                                <span class="text-sm font-medium">Topi</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- C. Ukuran Kaos Kerah -->
+                    <div>
+                        <h3 class="text-sm font-bold text-green-700 uppercase bg-green-50 p-2.5 rounded-lg mb-4 border-l-4 border-green-600">C. Ukuran Kaos Kerah</h3>
+                        <div class="flex flex-wrap gap-4 mb-4">
+                            <label class="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="ukuranKaos" value="S" class="text-green-600 focus:ring-green-500">
+                                <span class="text-sm font-semibold">S</span>
+                            </label>
+                            <label class="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="ukuranKaos" value="M" class="text-green-600 focus:ring-green-500">
+                                <span class="text-sm font-semibold">M</span>
+                            </label>
+                            <label class="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="ukuranKaos" value="L" checked class="text-green-600 focus:ring-green-500">
+                                <span class="text-sm font-semibold">L</span>
+                            </label>
+                            <label class="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="ukuranKaos" value="XL" class="text-green-600 focus:ring-green-500">
+                                <span class="text-sm font-semibold">XL</span>
+                            </label>
+                            <label class="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="ukuranKaos" value="XXL" class="text-green-600 focus:ring-green-500">
+                                <span class="text-sm font-semibold">XXL</span>
+                            </label>
+                            <label class="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="ukuranKaos" value="XXXL" class="text-green-600 focus:ring-green-500">
+                                <span class="text-sm font-semibold">XXXL</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Catatan Lain</label>
+                            <input type="text" id="catatan" class="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="Tambahan catatan jika ada...">
+                        </div>
+                    </div>
+
+                    <!-- D. Biaya & Pernyataan -->
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
+                        <h3 class="text-sm font-bold text-green-700 uppercase">D. Biaya Pembuatan KTA, Kaos Kerah dan Topi</h3>
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-200 pb-3">
+                            <span class="text-sm font-medium text-slate-600">Nominal Minimal :</span>
+                            <span class="text-base font-bold text-green-700">Rp 150.000,-</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <span class="text-sm font-medium text-slate-600">Nominal Dibayar :</span>
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <span class="text-sm font-bold">Rp</span>
+                                <input type="number" id="nominalBayar" value="150000" min="150000" class="w-full sm:w-48 px-3 py-2 border border-slate-300 rounded-lg text-sm font-bold text-green-700 bg-white" required>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-500 italic mt-2">Dengan ini saya menyatakan data di atas benar dan bersedia menjaga nama baik RPM.</p>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-arrow-right">></i> Lanjut ke Pembayaran QRIS & KTA
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 2: PEMBAYARAN QRIS -->
+        <section id="section-qris" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 max-w-xl mx-auto text-center">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold text-slate-800 uppercase">Scan QRIS untuk Pembayaran</h2>
+                    <p class="text-xs text-slate-500 mt-1">YAYASAN RUMAH PEMBERDAYAAN MASYARAKAT</p>
+                </div>
+
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 inline-block mb-6 shadow-inner">
+                    <!-- QR Code Canvas Container -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm inline-block mb-3">
+                        <canvas id="qrisCanvas" class="mx-auto"></canvas>
+                    </div>
+                    <div class="text-xs text-slate-600 font-medium">NMID: ID1029384756192</div>
+                    <div class="text-lg font-bold text-green-700 mt-1" id="displayNominal">Rp 150.000,-</div>
+                </div>
+
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left text-xs text-amber-800 mb-6 flex items-start gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-600 text-base mt-0.5"></i>
+                    <div>
+                        <span class="font-bold block mb-0.5">Petunjuk Pembayaran:</span>
+                        1. Buka aplikasi M-Banking atau E-Wallet (GoPay, OVO, DANA, BCA, Mandiri, dll).<br>
+                        2. Pilih menu <b>Scan QR / QRIS</b>.<br>
+                        3. Arahkan kamera ke QR code di atas, pastikan nominal sesuai.<br>
+                        4. Selesaikan transaksi lalu klik tombol konfirmasi di bawah.
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button onclick="switchTab('form')" class="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50 text-sm">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Form
+                    </button>
+                    <button onclick="simulatePaymentSuccess()" class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium text-sm shadow-md flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check-circle"></i> Konfirmasi Sudah Bayar
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: KTA DIGITAL & CETAK FORM -->
+        <section id="section-kta" class="hidden space-y-8">
+            
+            <!-- Success Notification Banner -->
+            <div class="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center justify-between text-green-800">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-circle-check text-2xl text-green-600"></i>
+                    <div>
+                        <h4 class="font-bold text-sm">Pembayaran Terverifikasi & Pendaftaran Berhasil!</h4>
+                        <p class="text-xs text-green-700">KTA Digital dan Formulir Anda sudah siap diunduh atau dicetak.</p>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="downloadPDF()" class="bg-green-700 hover:bg-green-800 text-white text-xs px-4 py-2 rounded-lg font-medium shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-pdf"></i> Unduh PDF Form
+                    </button>
+                    <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-4 py-2 rounded-lg font-medium shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-print"></i> Cetak / Print
+                    </button>
+                </div>
+            </div>
+
+            <!-- KTA DIGITAL PREVIEW -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+                <h3 class="text-sm font-bold text-green-700 uppercase mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-id-card"></i> KARTU TANDA ANGGOTA (KTA) DIGITAL RPM
+                </h3>
+
+                <!-- KTA Card Mockup -->
+                <div class="max-w-md mx-auto bg-gradient-to-br from-green-800 via-green-700 to-emerald-900 rounded-2xl shadow-xl text-white p-6 relative overflow-hidden border border-green-600">
+                    <!-- Background Watermark -->
+                    <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
+                        <img src="Logo_Rumah_Pemberdayaan_Masyarakat__1_-removebg-preview(1).png" class="w-64 h-64 object-contain">
+                    </div>
+
+                    <!-- Card Header -->
+                    <div class="flex items-center justify-between border-b border-green-600/60 pb-3 mb-4">
+                        <div class="flex items-center gap-2.5">
+                            <div class="bg-white p-1 rounded-lg">
+                                <img src="Logo_Rumah_Pemberdayaan_Masyarakat__1_-removebg-preview(1).png" class="h-8 object-contain">
+                            </div>
+                            <div>
+                                <h4 class="text-[11px] font-bold uppercase tracking-wider">RUMAH PEMBERDAYAAN MASYARAKAT</h4>
+                                <p class="text-[9px] text-green-200">KABUPATEN JEPARA</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] bg-amber-400 text-slate-900 font-extrabold px-2 py-0.5 rounded uppercase">KTA RESMI</span>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="flex gap-4 items-center">
+                        <div class="w-24 h-32 bg-slate-200 rounded-lg overflow-hidden border-2 border-white/80 shadow-md flex-shrink-0">
+                            <img id="ktaFoto" src="https://placehold.co/150x200/cccccc/ffffff?text=Foto" class="w-full h-full object-cover">
+                        </div>
+                        <div class="space-y-1 text-xs w-full">
+                            <div>
+                                <span class="text-[10px] text-green-200 uppercase block">Nama Lengkap</span>
+                                <span id="ktaNama" class="font-bold text-sm leading-tight block">--</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-green-200 uppercase block">NIK</span>
+                                <span id="ktaNik" class="font-mono text-xs">--</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-green-200 uppercase block">Bidang / Divisi</span>
+                                <span id="ktaDivisi" class="font-medium text-amber-300">--</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-green-200 uppercase block">No. Anggota</span>
+                                <span id="ktaNo" class="font-mono text-xs">RPM-2026-00192</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="mt-4 pt-3 border-t border-green-600/60 flex justify-between items-center text-[10px] text-green-200">
+                        <div>Ketua Umum RPM<br><strong class="text-white">Kelet, Keling, Jepara</strong></div>
+                        <div class="bg-white p-1 rounded">
+                            <canvas id="ktaBarCode" class="w-12 h-12"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRINTABLE FORMULIR SECTION (Hidden until print or PDF) -->
+            <div id="printArea" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-6">
+                <div class="flex items-center justify-between border-b pb-4">
+                    <div class="flex items-center gap-3">
+                        <img src="Logo_Rumah_Pemberdayaan_Masyarakat__1_-removebg-preview(1).png" class="h-12 object-contain">
+                        <div>
+                            <h2 class="text-sm font-bold text-green-800 uppercase">YAYASAN RUMAH PEMBERDAYAAN MASYARAKAT (RPM)</h2>
+                            <p class="text-xs text-slate-500">Kelet, Kecamatan Keling, Kabupaten Jepara, Jawa Tengah</p>
+                        </div>
+                    </div>
+                    <div class="text-right text-xs text-slate-500 font-mono">
+                        No: REG/RPM/2026/0491
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <h3 class="text-base font-bold text-slate-800 uppercase underline decoration-green-600 underline-offset-4">FORMULIR PENDAFTARAN KTA, KAOS KERAH DAN TOPI</h3>
+                </div>
+
+                <!-- A. Data Anggota -->
+                <div class="space-y-2 text-sm">
+                    <h4 class="font-bold text-green-700 bg-slate-100 p-1.5 rounded text-xs uppercase">A. Data Anggota</h4>
+                    <table class="w-full text-xs space-y-1">
+                        <tr><td class="py-1 w-1/4 text-slate-500">Nama Lengkap</td><td class="w-2">:</td><td id="resNama" class="font-bold">--</td><td rowspan="7" class="w-32 align-top text-center"><div class="w-24 h-32 border border-slate-300 mx-auto overflow-hidden rounded"><img id="resFoto" src="" class="w-full h-full object-cover"></div><span class="text-[9px] text-slate-400 mt-1 block">Pas foto 3x4</span></td></tr>
+                        <tr><td class="py-1 text-slate-500">NIK</td><td>:</td><td id="resNik">--</td></tr>
+                        <tr><td class="py-1 text-slate-500">Tempat, Tgl. Lahir</td><td>:</td><td id="resTtl">--</td></tr>
+                        <tr><td class="py-1 text-slate-500">Jenis Kelamin</td><td>:</td><td id="resGender">--</td></tr>
+                        <tr><td class="py-1 text-slate-500">Gol. Darah</td><td>:</td><td id="resGoldar">--</td></tr>
+                        <tr><td class="py-1 text-slate-500">Alamat</td><td>:</td><td id="resAlamat">--</td></tr>
+                        <tr><td class="py-1 text-slate-500">No. HP / WA</td><td>:</td><td id="resPhone">--</td></tr>
+                        <tr><td class="py-1 text-slate-500">Pekerjaan</td><td>:</td><td id="resPekerjaan" colspan="2">--</td></tr>
+                        <tr><td class="py-1 text-slate-500">Bidang / Divisi</td><td>:</td><td id="resDivisi" colspan="2">--</td></tr>
+                    </table>
+                </div>
+
+                <!-- B. Permohonan -->
+                <div class="space-y-2 text-sm">
+                    <h4 class="font-bold text-green-700 bg-slate-100 p-1.5 rounded text-xs uppercase">B. Permohonan</h4>
+                    <div class="text-xs flex gap-6">
+                        <span>[ <span id="checkKta">v</span> ] Kartu Tanda Anggota (KTA)</span>
+                        <span>[ <span id="checkKaos">v</span> ] Kaos Kerah</span>
+                        <span>[ <span id="checkTopi">v</span> ] Topi</span>
+                    </div>
+                </div>
+
+                <!-- C. Ukuran Kaos -->
+                <div class="space-y-2 text-sm">
+                    <h4 class="font-bold text-green-700 bg-slate-100 p-1.5 rounded text-xs uppercase">C. Ukuran Kaos Kerah</h4>
+                    <div class="text-xs flex gap-6 items-center">
+                        <span>Ukuran: <strong id="resUkuran" class="text-green-700 text-sm">L</strong></span>
+                        <span>Catatan: <span id="resCatatan" class="italic text-slate-600">-</span></span>
+                    </div>
+                </div>
+
+                <!-- D. Biaya -->
+                <div class="space-y-2 text-sm">
+                    <h4 class="font-bold text-green-700 bg-slate-100 p-1.5 rounded text-xs uppercase">D. Biaya Pembuatan</h4>
+                    <div class="text-xs grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded">
+                        <div>Nominal Minimal : <strong>Rp 150.000,-</strong></div>
+                        <div>Nominal Dibayar : <strong id="resBayar" class="text-green-700">Rp 150.000,- (Lunas Qris)</strong></div>
+                    </div>
+                </div>
+
+                <div class="text-xs italic text-slate-600">
+                    Dengan ini saya menyatakan data di atas benar dan bersedia menjaga nama baik RPM.
+                </div>
+
+                <!-- Signatures -->
+                <div class="grid grid-cols-2 pt-8 text-xs text-center">
+                    <div>
+                        <p class="mb-16">Mengetahui,<br>Pengurus RPM</p>
+                        <p class="font-bold">( ....................................... )</p>
+                    </div>
+                    <div>
+                        <p class="mb-1 mb-16">Kelet, <span id="currentDate">12 November 2026</span><br>Pemohon,</p>
+                        <p class="font-bold">( <span id="signNama">.......................................</span> )</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-xs text-slate-400 no-print">
+        &copy; 2026 Yayasan Rumah Pemberdayaan Masyarakat (RPM). All Rights Reserved.
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        let globalFormData = {};
+
+        // Generate QRIS code on load
+        window.onload = function() {
+            // QRIS QR Code simulation
+            new QRious({
+                element: document.getElementById('qrisCanvas'),
+                value: '00020101021126680016ID.CO.QRIS.WWW01189360091430000010303UMI0215260193847561953033605802ID5926RUMAH PEMBERDAYAAN MASYARAKAT6005JEPARA6304',
+                size: 180,
+                background: 'white',
+                foreground: '#166534'
+            });
+
+            // Set default date
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            document.getElementById('currentDate').innerText = new Date().toLocaleDateString('id-ID', options);
+        };
+
+        function switchTab(tabId) {
+            document.getElementById('section-form').classList.add('hidden');
+            document.getElementById('section-qris').classList.add('hidden');
+            document.getElementById('section-kta').classList.add('hidden');
+
+            document.getElementById('tab-form').className = "py-3 px-6 font-semibold text-slate-500 hover:text-green-700 flex items-center gap-2 transition border-b-2 border-transparent";
+            document.getElementById('tab-qris').className = "py-3 px-6 font-semibold text-slate-500 hover:text-green-700 flex items-center gap-2 transition border-b-2 border-transparent";
+            document.getElementById('tab-kta').className = "py-3 px-6 font-semibold text-slate-500 hover:text-green-700 flex items-center gap-2 transition border-b-2 border-transparent";
+
+            if(tabId === 'form') {
+                document.getElementById('section-form').classList.remove('hidden');
+                document.getElementById('tab-form').className = "py-3 px-6 font-semibold text-green-700 border-b-2 border-green-600 flex items-center gap-2 transition";
+            } else if(tabId === 'qris') {
+                document.getElementById('section-qris').classList.remove('hidden');
+                document.getElementById('tab-qris').className = "py-3 px-6 font-semibold text-green-700 border-b-2 border-green-600 flex items-center gap-2 transition";
+            } else if(tabId === 'kta') {
+                document.getElementById('section-kta').classList.remove('hidden');
+                document.getElementById('tab-kta').className = "py-3 px-6 font-semibold text-green-700 border-b-2 border-green-600 flex items-center gap-2 transition";
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function previewFoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('imgPreview');
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                    document.getElementById('placeholderText').classList.add('hidden');
+                    globalFormData.foto = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            // Gather values
+            globalFormData.nama = document.getElementById('nama').value;
+            globalFormData.nik = document.getElementById('nik').value;
+            globalFormData.ttl = document.getElementById('ttl').value;
+            globalFormData.gender = document.getElementById('gender').value;
+            globalFormData.goldar = document.getElementById('goldar').value;
+            globalFormData.alamat = document.getElementById('alamat').value;
+            globalFormData.phone = document.getElementById('phone').value;
+            globalFormData.pekerjaan = document.getElementById('pekerjaan').value;
+            globalFormData.divisi = document.getElementById('divisi').value;
+            globalFormData.nominal = document.getElementById('nominalBayar').value;
+            globalFormData.catatan = document.getElementById('catatan').value || '-';
+            
+            const selectedUkuran = document.querySelector('input[name="ukuranKaos"]:checked');
+            globalFormData.ukuran = selectedUkuran ? selectedUkuran.value : 'L';
+
+            if(!globalFormData.foto) {
+                globalFormData.foto = 'https://placehold.co/150x200/16a34a/ffffff?text=Pas+Foto';
+            }
+
+            // Update nominal display in qris tab
+            document.getElementById('displayNominal').innerText = 'Rp ' + Number(globalFormData.nominal).toLocaleString('id-ID') + ',-';
+
+            // Switch to QRIS tab
+            switchTab('qris');
+        }
+
+        function simulatePaymentSuccess() {
+            // Populate KTA & Results
+            document.getElementById('ktaNama').innerText = globalFormData.nama;
+            document.getElementById('ktaNik').innerText = globalFormData.nik;
+            document.getElementById('ktaDivisi').innerText = globalFormData.divisi;
+            document.getElementById('ktaFoto').src = globalFormData.foto;
+
+            document.getElementById('resNama').innerText = globalFormData.nama;
+            document.getElementById('signNama').innerText = globalFormData.nama;
+            document.getElementById('resNik').innerText = globalFormData.nik;
+            document.getElementById('resTtl').innerText = globalFormData.ttl;
+            document.getElementById('resGender').innerText = globalFormData.gender;
+            document.getElementById('resGoldar').innerText = globalFormData.goldar;
+            document.getElementById('resAlamat').innerText = globalFormData.alamat;
+            document.getElementById('resPhone').innerText = globalFormData.phone;
+            document.getElementById('resPekerjaan').innerText = globalFormData.pekerjaan;
+            document.getElementById('resDivisi').innerText = globalFormData.divisi;
+            document.getElementById('resUkuran').innerText = globalFormData.ukuran;
+            document.getElementById('resCatatan').innerText = globalFormData.catatan;
+            document.getElementById('resBayar').innerText = 'Rp ' + Number(globalFormData.nominal).toLocaleString('id-ID') + ',- (Lunas)';
+            document.getElementById('resFoto').src = globalFormData.foto;
+
+            // Generate small barcode for KTA
+            new QRious({
+                element: document.getElementById('ktaBarCode'),
+                value: 'RPM-ID-' + globalFormData.nik,
+                size: 60,
+                background: 'white',
+                foreground: '#166534'
+            });
+
+            // Switch to KTA & Success tab
+            switchTab('kta');
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('printArea');
+            const opt = {
+                margin:       10,
+                filename:     'Formulir_Pendaftaran_RPM_' + globalFormData.nama.replace(/\s+/g, '_') + '.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().from(element).set(opt).save();
+        }
+    </script>
+</body>
+</html>
