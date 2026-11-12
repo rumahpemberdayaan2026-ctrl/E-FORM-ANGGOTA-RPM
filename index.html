@@ -3,102 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pendaftaran Anggota - Rumah Pemberdayaan Masyarakat (RPM)</title>
+    <title>Pendaftaran Anggota & KTA Resmi - Yayasan Rumah Pemberdayaan Masyarakat (RPM)</title>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- html2pdf for PDF Generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- qrious for QR Code generation -->
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts: Inter & Dancing Script (untuk tulisan kaligrafi KTA belakang) -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Libraries untuk QR Code, HTML2Canvas, dan jsPDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .font-script {
+            font-family: 'Dancing Script', cursive;
+        }
+
+        /* Ukuran Standar ID Card CR80 dalam pixel proporsional tajam (Rasio 85.6 : 53.98) */
+        .kta-card {
+            width: 540px;
+            height: 340px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.25);
+            background-color: #ffffff;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        /* Responsif wrapper untuk KTA di layar kecil */
+        .kta-scale-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 0;
+        }
+
+        /* Tampilan Formulir A4 untuk PDF / Cetak */
+        .a4-form-sheet {
+            width: 794px; /* ~210mm pada 96dpi */
+            min-height: 1123px; /* ~297mm pada 96dpi */
+            background: #ffffff;
+            padding: 45px 55px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            color: #111827;
+            position: relative;
+        }
+
+        .dotted-line {
+            border-bottom: 1.5px dotted #374151;
+            min-height: 22px;
+            display: inline-block;
+            width: 100%;
+            padding-left: 6px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        /* Print Media Query */
         @media print {
-            .no-print { display: none !important; }
-            body { background: white !important; }
+            body * {
+                visibility: hidden;
+            }
+            #print-target, #print-target * {
+                visibility: visible;
+            }
+            #print-target {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen">
+<body class="text-slate-800 min-h-screen flex flex-col">
 
-    <!-- Header / Navbar -->
-    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
-            <div class="flex items-center space-x-3">
-                <img src="Logo_Rumah_Pemberdayaan_Masyarakat__1_-removebg-preview(1).png" alt="Logo RPM" class="h-12 object-contain" onerror="this.src='https://placehold.co/150x50/16a34a/ffffff?text=RPM+Logo'">
-                <div>
-                    <h1 class="text-sm font-bold text-green-700 uppercase tracking-wide">Yayasan Rumah Pemberdayaan Masyarakat (RPM)</h1>
+    <!-- Toast Notification Container (Pengganti alert) -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- HEADER APLIKASI -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <!-- Logo SVG Presisi RPM -->
+                <div class="w-44 sm:w-52 flex-shrink-0" id="headerLogoContainer"></div>
+                <div class="hidden md:block border-l border-slate-200 pl-3">
+                    <h1 class="text-sm font-extrabold text-[#0c3b6e] uppercase tracking-tight">Yayasan Rumah Pemberdayaan Masyarakat (RPM)</h1>
                     <p class="text-xs text-slate-500">Kelet, Kecamatan Keling, Kabupaten Jepara, Jawa Tengah</p>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <span class="text-xs bg-green-100 text-green-800 font-medium px-3 py-1 rounded-full"><i class="fa-solid fa-shield-check mr-1"></i> Sistem Pendaftaran Resmi</span>
+                <button onclick="fillSampleData()" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Isi Data Contoh
+                </button>
+                <span class="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-check text-emerald-600"></i> Portal Resmi
+                </span>
             </div>
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="max-w-5xl mx-auto px-4 py-8">
-        
-        <!-- Tab Navigation -->
-        <div class="flex border-b border-slate-200 mb-6 no-print">
-            <button onclick="switchTab('form')" id="tab-form" class="py-3 px-6 font-semibold text-green-700 border-b-2 border-green-600 flex items-center gap-2 transition">
-                <i class="fa-solid fa-file-pen"></i> Formulir Pendaftaran
-            </button>
-            <button onclick="switchTab('qris')" id="tab-qris" class="py-3 px-6 font-semibold text-slate-500 hover:text-green-700 flex items-center gap-2 transition">
-                <i class="fa-solid fa-qrcode"></i> Pembayaran QRIS
-            </button>
-            <button onclick="switchTab('kta')" id="tab-kta" class="py-3 px-6 font-semibold text-slate-500 hover:text-green-700 flex items-center gap-2 transition">
-                <i class="fa-solid fa-id-card"></i> KTA Digital Otomatis
-            </button>
+    <!-- STEPPER NAVIGATION -->
+    <div class="bg-white border-b border-slate-200 no-print">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+            <div class="grid grid-cols-3 gap-2 sm:gap-4">
+                <button onclick="navigateStep(1)" id="stepBtn1" class="flex items-center justify-center sm:justify-start gap-2.5 p-2.5 rounded-xl border-2 border-emerald-600 bg-emerald-50/70 text-emerald-800 font-bold text-xs sm:text-sm transition">
+                    <span class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs flex-shrink-0">1</span>
+                    <span class="truncate">Isi Formulir</span>
+                </button>
+                <button onclick="navigateStep(2)" id="stepBtn2" class="flex items-center justify-center sm:justify-start gap-2.5 p-2.5 rounded-xl border-2 border-slate-200 bg-white text-slate-500 font-semibold text-xs sm:text-sm transition">
+                    <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs flex-shrink-0">2</span>
+                    <span class="truncate">Bayar QRIS</span>
+                </button>
+                <button onclick="navigateStep(3)" id="stepBtn3" class="flex items-center justify-center sm:justify-start gap-2.5 p-2.5 rounded-xl border-2 border-slate-200 bg-white text-slate-500 font-semibold text-xs sm:text-sm transition">
+                    <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs flex-shrink-0">3</span>
+                    <span class="truncate">KTA & PDF</span>
+                </button>
+            </div>
         </div>
+    </div>
 
-        <!-- TAB 1: FORMULIR PENDAFTARAN -->
-        <section id="section-form" class="space-y-6">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
-                <div class="text-center mb-8 border-b pb-6">
-                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 uppercase">FORMULIR PENDAFTARAN KTA, KAOS KERAH DAN TOPI</h2>
-                    <p class="text-sm text-slate-500 mt-1">YAYASAN RUMAH PEMBERDAYAAN MASYARAKAT (RPM)</p>
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6 sm:py-8">
+
+        <!-- ========================================================= -->
+        <!-- TAHAP 1: FORMULIR PENDAFTARAN ANGGOTA                     -->
+        <!-- ========================================================= -->
+        <section id="step1Section" class="space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <!-- Kop Formulir Digital -->
+                <div class="bg-gradient-to-r from-[#0c3b6e] via-[#105396] to-[#15803d] p-6 text-white flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="bg-white p-2.5 rounded-xl shadow-md w-48 flex-shrink-0" id="formHeaderLogo"></div>
+                    <div class="text-center md:text-right">
+                        <h2 class="text-lg sm:text-xl font-extrabold tracking-wide uppercase">YAYASAN RUMAH PEMBERDAYAAN MASYARAKAT (RPM)</h2>
+                        <p class="text-xs sm:text-sm text-blue-100 mt-0.5">Kelet, Kecamatan Keling, Kabupaten Jepara, Jawa Tengah</p>
+                        <div class="inline-block mt-2 bg-amber-400 text-slate-900 font-extrabold text-xs px-3 py-1 rounded-full uppercase tracking-wider">
+                            Formulir Pendaftaran KTA, Kaos Kerah & Topi
+                        </div>
+                    </div>
                 </div>
 
-                <form id="registrationForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                <form id="rpmForm" onsubmit="submitFormToQris(event)" class="p-6 sm:p-8 space-y-8">
                     
-                    <!-- A. Data Anggota -->
+                    <!-- Bagian A: Data Anggota -->
                     <div>
-                        <h3 class="text-sm font-bold text-green-700 uppercase bg-green-50 p-2.5 rounded-lg mb-4 border-l-4 border-green-600">A. Data Anggota</h3>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- Left inputs -->
-                            <div class="md:col-span-2 space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-emerald-600 pb-2 mb-5">
+                            <div class="flex items-center gap-2">
+                                <span class="bg-emerald-600 text-white font-bold text-xs px-2.5 py-1 rounded">A</span>
+                                <h3 class="font-bold text-slate-800 uppercase text-sm sm:text-base">Data Anggota</h3>
+                            </div>
+                            <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl">
+                                <label for="inNoFormulir" class="text-xs font-extrabold text-[#0c3b6e] uppercase whitespace-nowrap">No. Formulir / No. KTA:</label>
+                                <input type="text" id="inNoFormulir" required oninput="syncFormNumberLive()" class="bg-white border border-blue-300 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-[#0c3b6e] w-36 focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <button type="button" onclick="regenerateFormNumber()" title="Buat Nomor Baru" class="text-[#0c3b6e] hover:text-emerald-700 text-xs px-1">
+                                    <i class="fa-solid fa-rotate"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            <!-- Input Fields -->
+                            <div class="lg:col-span-8 space-y-4">
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nama Lengkap</label>
-                                    <input type="text" id="nama" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="Masukkan nama lengkap beserta gelar">
+                                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
+                                    <input type="text" id="inNama" required placeholder="Contoh: Ahmad Budi Santoso, S.Pd." class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition">
                                 </div>
+
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">NIK</label>
-                                        <input type="text" id="nik" required maxlength="16" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="3320xxxxxxxxxxxx">
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">NIK (16 Digit) <span class="text-red-500">*</span></label>
+                                        <input type="text" id="inNik" required maxlength="16" minlength="16" pattern="\d{16}" placeholder="3320123456780001" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-mono focus:ring-2 focus:ring-emerald-500 outline-none transition">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tempat, Tgl. Lahir</label>
-                                        <input type="text" id="ttl" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="Jepara, 17 Agustus 1990">
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">No. HP / WA <span class="text-red-500">*</span></label>
+                                        <input type="tel" id="inHp" required placeholder="081234567890" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition">
                                     </div>
                                 </div>
+
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Jenis Kelamin</label>
-                                        <select id="gender" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none">
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tempat Lahir <span class="text-red-500">*</span></label>
+                                        <input type="text" id="inTempatLahir" required placeholder="Jepara" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tanggal Lahir <span class="text-red-500">*</span></label>
+                                        <input type="date" id="inTglLahir" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Jenis Kelamin <span class="text-red-500">*</span></label>
+                                        <select id="inGender" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition">
                                             <option value="Laki-laki">Laki-laki</option>
                                             <option value="Perempuan">Perempuan</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Gol. Darah</label>
-                                        <select id="goldar" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none">
-                                            <option value="-">-</option>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Golongan Darah</label>
+                                        <select id="inGoldar" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition">
+                                            <option value="-">- (Tidak Tahu)</option>
                                             <option value="A">A</option>
                                             <option value="B">B</option>
                                             <option value="AB">AB</option>
@@ -106,465 +229,1206 @@
                                         </select>
                                     </div>
                                 </div>
+
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Alamat Lengkap</label>
-                                    <textarea id="alamat" rows="2" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="Desa Kelet RT/RW, Kec. Keling, Kab. Jepara"></textarea>
+                                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Alamat Lengkap <span class="text-red-500">*</span></label>
+                                    <textarea id="inAlamat" rows="2" required placeholder="Desa Kelet RT 02 / RW 03, Kec. Keling, Kab. Jepara, Jawa Tengah" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition"></textarea>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">No. HP / WA</label>
-                                        <input type="text" id="phone" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="08xxxxxxxxxx">
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Pekerjaan <span class="text-red-500">*</span></label>
+                                        <input type="text" id="inPekerjaan" required placeholder="Wiraswasta / Guru / Petani" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Pekerjaan</label>
-                                        <input type="text" id="pekerjaan" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="Wartawan / Petani / Wiraswasta">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Bidang / Divisi</label>
-                                        <input type="text" id="divisi" required class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="Pemberdayaan / Media / Sosial">
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Bidang / Divisi <span class="text-red-500">*</span></label>
+                                        <input type="text" id="inDivisi" required placeholder="Pemberdayaan Ekonomi / Sosial" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition">
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Pas Foto Upload -->
-                            <div class="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl p-4 bg-slate-50 text-center">
-                                <div id="previewContainer" class="w-32 h-44 bg-slate-200 rounded-lg flex items-center justify-center overflow-hidden mb-3 border relative shadow-inner">
-                                    <span id="placeholderText" class="text-xs text-slate-400 p-2 text-center">Pas Foto 3 x 4<br>(Max 2MB)</span>
-                                    <img id="imgPreview" class="w-full h-full object-cover hidden" alt="Pas Foto">
+                            <!-- Pas Foto 3x4 Upload -->
+                            <div class="lg:col-span-4 flex flex-col items-center justify-center bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl p-5 text-center">
+                                <p class="text-xs font-bold text-slate-700 uppercase mb-3">Pas Foto 3 x 4 <span class="text-red-500">*</span></p>
+                                <div class="w-36 h-48 rounded-xl border-2 border-[#0c3b6e] bg-white shadow-inner overflow-hidden flex items-center justify-center relative mb-3">
+                                    <img id="fotoPreviewBox" src="" alt="Preview Foto" class="w-full h-full object-cover hidden">
+                                    <div id="fotoPlaceholder" class="text-slate-400 p-3 flex flex-col items-center">
+                                        <i class="fa-solid fa-user-tie text-4xl mb-2 text-slate-300"></i>
+                                        <span class="text-[11px] leading-tight">Belum ada foto.<br>Rasio 3x4</span>
+                                    </div>
                                 </div>
-                                <label class="cursor-pointer bg-green-600 text-white text-xs px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition shadow-sm">
-                                    <i class="fa-solid fa-camera mr-1"></i> Upload Foto
-                                    <input type="file" id="fotoInput" accept="image/*" class="hidden" onchange="previewFoto(event)">
+                                <div class="flex flex-col gap-2 w-full max-w-[200px]">
+                                    <label class="cursor-pointer bg-[#0c3b6e] hover:bg-blue-900 text-white text-xs font-semibold py-2.5 px-4 rounded-xl transition shadow-sm flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-upload"></i> Pilih Pas Foto
+                                        <input type="file" id="inFoto" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
+                                    </label>
+                                    <button type="button" onclick="useSampleAvatar()" class="text-[11px] text-emerald-700 hover:underline font-medium">
+                                        Gunakan Foto Contoh
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bagian B & C: Permohonan & Ukuran Kaos -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- B. Permohonan -->
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                            <div class="flex items-center gap-2 border-b border-slate-200 pb-2 mb-4">
+                                <span class="bg-emerald-600 text-white font-bold text-xs px-2 py-0.5 rounded">B</span>
+                                <h3 class="font-bold text-slate-800 uppercase text-xs sm:text-sm">Permohonan (Centang yang diperlukan)</h3>
+                            </div>
+                            <div class="space-y-2.5">
+                                <label class="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-emerald-500 transition">
+                                    <input type="checkbox" id="chkKta" checked class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <span class="text-sm font-medium text-slate-700">Kartu Tanda Anggota (KTA)</span>
                                 </label>
-                                <span class="text-[10px] text-slate-400 mt-2">Format: JPG, PNG (Rasio 3:4)</span>
+                                <label class="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-emerald-500 transition">
+                                    <input type="checkbox" id="chkKaos" checked class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <span class="text-sm font-medium text-slate-700">Kaos Kerah</span>
+                                </label>
+                                <label class="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-emerald-500 transition">
+                                    <input type="checkbox" id="chkTopi" checked class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <span class="text-sm font-medium text-slate-700">Topi</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- C. Ukuran Kaos Kerah -->
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                            <div class="flex items-center gap-2 border-b border-slate-200 pb-2 mb-4">
+                                <span class="bg-emerald-600 text-white font-bold text-xs px-2 py-0.5 rounded">C</span>
+                                <h3 class="font-bold text-slate-800 uppercase text-xs sm:text-sm">Ukuran Kaos Kerah</h3>
+                            </div>
+                            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="ukuranKaos" value="S" class="peer sr-only">
+                                    <div class="text-center py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition">S</div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="ukuranKaos" value="M" class="peer sr-only">
+                                    <div class="text-center py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition">M</div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="ukuranKaos" value="L" checked class="peer sr-only">
+                                    <div class="text-center py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition">L</div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="ukuranKaos" value="XL" class="peer sr-only">
+                                    <div class="text-center py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition">XL</div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="ukuranKaos" value="XXL" class="peer sr-only">
+                                    <div class="text-center py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition">XXL</div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="ukuranKaos" value="XXXL" class="peer sr-only">
+                                    <div class="text-center py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold peer-checked:bg-emerald-600 peer-checked:text-white peer-checked:border-emerald-600 transition">XXXL</div>
+                                </label>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Catatan Lain</label>
+                                <input type="text" id="inCatatan" placeholder="Catatan tambahan (opsional)" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
                             </div>
                         </div>
                     </div>
 
-                    <!-- B. Permohonan -->
-                    <div>
-                        <h3 class="text-sm font-bold text-green-700 uppercase bg-green-50 p-2.5 rounded-lg mb-4 border-l-4 border-green-600">B. Permohonan (Centang yang diperlukan)</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <label class="flex items-center space-x-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                                <input type="checkbox" id="reqKta" checked class="w-4 h-4 text-green-600 rounded focus:ring-green-500">
-                                <span class="text-sm font-medium">Kartu Tanda Anggota (KTA)</span>
-                            </label>
-                            <label class="flex items-center space-x-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                                <input type="checkbox" id="reqKaos" checked class="w-4 h-4 text-green-600 rounded focus:ring-green-500">
-                                <span class="text-sm font-medium">Kaos Kerah</span>
-                            </label>
-                            <label class="flex items-center space-x-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                                <input type="checkbox" id="reqTopi" checked class="w-4 h-4 text-green-600 rounded focus:ring-green-500">
-                                <span class="text-sm font-medium">Topi</span>
-                            </label>
+                    <!-- Bagian D: Biaya & Pernyataan -->
+                    <div class="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-5 sm:p-6 space-y-4">
+                        <div class="flex items-center gap-2 border-b border-emerald-200 pb-2">
+                            <span class="bg-emerald-600 text-white font-bold text-xs px-2 py-0.5 rounded">D</span>
+                            <h3 class="font-bold text-emerald-900 uppercase text-xs sm:text-sm">Biaya Pembuatan KTA, Kaos Kerah dan Topi</h3>
                         </div>
-                    </div>
 
-                    <!-- C. Ukuran Kaos Kerah -->
-                    <div>
-                        <h3 class="text-sm font-bold text-green-700 uppercase bg-green-50 p-2.5 rounded-lg mb-4 border-l-4 border-green-600">C. Ukuran Kaos Kerah</h3>
-                        <div class="flex flex-wrap gap-4 mb-4">
-                            <label class="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                                <input type="radio" name="ukuranKaos" value="S" class="text-green-600 focus:ring-green-500">
-                                <span class="text-sm font-semibold">S</span>
-                            </label>
-                            <label class="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                                <input type="radio" name="ukuranKaos" value="M" class="text-green-600 focus:ring-green-500">
-                                <span class="text-sm font-semibold">M</span>
-                            </label>
-                            <label class="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                                <input type="radio" name="ukuranKaos" value="L" checked class="text-green-600 focus:ring-green-500">
-                                <span class="text-sm font-semibold">L</span>
-                            </label>
-                            <label class="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                                <input type="radio" name="ukuranKaos" value="XL" class="text-green-600 focus:ring-green-500">
-                                <span class="text-sm font-semibold">XL</span>
-                            </label>
-                            <label class="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                                <input type="radio" name="ukuranKaos" value="XXL" class="text-green-600 focus:ring-green-500">
-                                <span class="text-sm font-semibold">XXL</span>
-                            </label>
-                            <label class="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                                <input type="radio" name="ukuranKaos" value="XXXL" class="text-green-600 focus:ring-green-500">
-                                <span class="text-sm font-semibold">XXXL</span>
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Catatan Lain</label>
-                            <input type="text" id="catatan" class="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="Tambahan catatan jika ada...">
-                        </div>
-                    </div>
-
-                    <!-- D. Biaya & Pernyataan -->
-                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
-                        <h3 class="text-sm font-bold text-green-700 uppercase">D. Biaya Pembuatan KTA, Kaos Kerah dan Topi</h3>
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-200 pb-3">
-                            <span class="text-sm font-medium text-slate-600">Nominal Minimal :</span>
-                            <span class="text-base font-bold text-green-700">Rp 150.000,-</span>
-                        </div>
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                            <span class="text-sm font-medium text-slate-600">Nominal Dibayar :</span>
-                            <div class="flex items-center gap-2 w-full sm:w-auto">
-                                <span class="text-sm font-bold">Rp</span>
-                                <input type="number" id="nominalBayar" value="150000" min="150000" class="w-full sm:w-48 px-3 py-2 border border-slate-300 rounded-lg text-sm font-bold text-green-700 bg-white" required>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                            <div>
+                                <span class="text-xs text-slate-600 block">Nominal Minimal:</span>
+                                <span class="text-lg font-extrabold text-slate-800">Rp 150.000,-</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-emerald-900 uppercase mb-1">Nominal Dibayar (Rp) <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-500">Rp</span>
+                                    <input type="number" id="inNominal" value="150000" min="150000" step="1000" required class="w-full pl-10 pr-4 py-2 rounded-xl border border-emerald-400 bg-white text-base font-extrabold text-emerald-800 focus:ring-2 focus:ring-emerald-600 outline-none">
+                                </div>
                             </div>
                         </div>
-                        <p class="text-xs text-slate-500 italic mt-2">Dengan ini saya menyatakan data di atas benar dan bersedia menjaga nama baik RPM.</p>
+
+                        <div class="pt-2 border-t border-emerald-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-700">
+                            <label class="flex items-start gap-2.5 cursor-pointer">
+                                <input type="checkbox" id="chkPernyataan" required checked class="mt-0.5 w-4 h-4 text-emerald-600 rounded">
+                                <span class="italic font-medium">Dengan ini saya menyatakan data di atas benar dan bersedia menjaga nama baik RPM.</span>
+                            </label>
+                            <div class="text-right font-semibold text-slate-600 flex-shrink-0">
+                                Kelet, <span id="formDatePreview"></span>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Submit Button -->
-                    <div class="flex flex-col sm:flex-row justify-end gap-3 pt-4">
-                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-arrow-right">></i> Lanjut ke Pembayaran QRIS & KTA
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                        <button type="button" onclick="exportFormPdfDirectly()" class="w-full sm:w-auto px-5 py-3 rounded-xl border-2 border-slate-300 hover:border-slate-400 bg-white text-slate-700 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-file-pdf text-red-600"></i> Simpan / Cetak Formulir PDF
+                        </button>
+                        <button type="submit" class="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2">
+                            <span>Lanjut ke Pembayaran QRIS</span>
+                            <i class="fa-solid fa-arrow-right"></i>
                         </button>
                     </div>
                 </form>
             </div>
         </section>
 
-        <!-- TAB 2: PEMBAYARAN QRIS -->
-        <section id="section-qris" class="hidden space-y-6">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 max-w-xl mx-auto text-center">
-                <div class="mb-6">
-                    <h2 class="text-xl font-bold text-slate-800 uppercase">Scan QRIS untuk Pembayaran</h2>
-                    <p class="text-xs text-slate-500 mt-1">YAYASAN RUMAH PEMBERDAYAAN MASYARAKAT</p>
+        <!-- ========================================================= -->
+        <!-- TAHAP 2: PEMBAYARAN QRIS OTOMATIS                         -->
+        <!-- ========================================================= -->
+        <section id="step2Section" class="hidden max-w-2xl mx-auto space-y-6">
+            <div class="bg-white rounded-3xl shadow-md border border-slate-200 overflow-hidden">
+                <!-- Header QRIS -->
+                <div class="bg-[#0c3b6e] text-white p-6 text-center relative">
+                    <span class="inline-block bg-amber-400 text-slate-900 text-[10px] font-extrabold px-3 py-0.5 rounded-full uppercase tracking-wider mb-2">Pembayaran Instan</span>
+                    <h2 class="text-xl font-extrabold uppercase">Pembayaran QRIS Resmi RPM</h2>
+                    <p class="text-xs text-blue-200 mt-1">
+                        Invoice: <span id="qrisInvoice" class="font-mono font-bold text-white">INV-RPM-2026-8821</span> • 
+                        No. Formulir / KTA: <span id="qrisNoFormulir" class="font-mono font-bold text-amber-300">RPM/2026/001</span>
+                    </p>
                 </div>
 
-                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 inline-block mb-6 shadow-inner">
-                    <!-- QR Code Canvas Container -->
-                    <div class="bg-white p-4 rounded-xl shadow-sm inline-block mb-3">
-                        <canvas id="qrisCanvas" class="mx-auto"></canvas>
+                <div class="p-6 sm:p-8 flex flex-col items-center text-center">
+                    <!-- Ringkasan Pemohon -->
+                    <div class="w-full bg-slate-50 rounded-2xl p-4 border border-slate-200 mb-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-left">
+                        <div>
+                            <span class="text-[11px] text-slate-500 uppercase font-semibold block">Nama Pendaftar</span>
+                            <span id="qrisMemberName" class="text-sm font-bold text-slate-800">-</span>
+                        </div>
+                        <div class="sm:text-right">
+                            <span class="text-[11px] text-slate-500 uppercase font-semibold block">Total Tagihan</span>
+                            <span id="qrisAmountDisplay" class="text-xl font-extrabold text-emerald-700">Rp 150.000,-</span>
+                        </div>
                     </div>
-                    <div class="text-xs text-slate-600 font-medium">NMID: ID1029384756192</div>
-                    <div class="text-lg font-bold text-green-700 mt-1" id="displayNominal">Rp 150.000,-</div>
-                </div>
 
-                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left text-xs text-amber-800 mb-6 flex items-start gap-3">
-                    <i class="fa-solid fa-triangle-exclamation text-amber-600 text-base mt-0.5"></i>
-                    <div>
-                        <span class="font-bold block mb-0.5">Petunjuk Pembayaran:</span>
-                        1. Buka aplikasi M-Banking atau E-Wallet (GoPay, OVO, DANA, BCA, Mandiri, dll).<br>
-                        2. Pilih menu <b>Scan QR / QRIS</b>.<br>
-                        3. Arahkan kamera ke QR code di atas, pastikan nominal sesuai.<br>
-                        4. Selesaikan transaksi lalu klik tombol konfirmasi di bawah.
+                    <!-- Countdown Timer -->
+                    <div class="mb-4 flex items-center gap-2 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-4 py-1.5 rounded-full">
+                        <i class="fa-regular fa-clock"></i>
+                        <span>Selesaikan pembayaran dalam <strong id="qrisCountdown" class="font-mono">14:59</strong></span>
                     </div>
-                </div>
 
-                <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                    <button onclick="switchTab('form')" class="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50 text-sm">
-                        <i class="fa-solid fa-arrow-left mr-1"></i> Kembali ke Form
-                    </button>
-                    <button onclick="simulatePaymentSuccess()" class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium text-sm shadow-md flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-check-circle"></i> Konfirmasi Sudah Bayar
-                    </button>
+                    <!-- Bingkai QRIS -->
+                    <div class="bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-sm max-w-xs w-full mb-6 relative">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
+                            <span class="font-black text-lg tracking-tighter text-slate-800">QRIS</span>
+                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">GPN / Nasional</span>
+                        </div>
+                        <p class="text-xs font-extrabold text-slate-800 uppercase mb-1">YAYASAN RPM JEPARA</p>
+                        <p class="text-[10px] text-slate-400 font-mono mb-3">NMID: ID1026009812734</p>
+                        
+                        <div class="flex justify-center p-2 bg-white rounded-xl border border-slate-100">
+                            <canvas id="qrisCodeCanvas"></canvas>
+                        </div>
+
+                        <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-center gap-2 text-[10px] text-slate-500 font-medium">
+                            <span>Mendukung:</span>
+                            <span class="font-bold text-blue-600">GoPay</span> •
+                            <span class="font-bold text-purple-600">OVO</span> •
+                            <span class="font-bold text-sky-500">DANA</span> •
+                            <span class="font-bold text-orange-500">ShopeePay</span> •
+                            <span class="font-bold text-slate-700">M-Banking</span>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Konfirmasi Simulasi -->
+                    <div class="w-full space-y-3">
+                        <button onclick="confirmQrisPayment()" id="btnConfirmPayment" class="w-full py-3.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-circle-check text-lg"></i>
+                            <span>Simulasi Konfirmasi Pembayaran Lunas</span>
+                        </button>
+                        <button onclick="navigateStep(1)" class="w-full py-2.5 px-4 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 font-semibold text-xs transition">
+                            <i class="fa-solid fa-arrow-left mr-1"></i> Ubah Data Formulir
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- TAB 3: KTA DIGITAL & CETAK FORM -->
-        <section id="section-kta" class="hidden space-y-8">
+        <!-- ========================================================= -->
+        <!-- TAHAP 3: KARTU TANDA ANGGOTA (KTA) & DOKUMEN PDF OTOMATIS -->
+        <!-- ========================================================= -->
+        <section id="step3Section" class="hidden space-y-8">
             
-            <!-- Success Notification Banner -->
-            <div class="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center justify-between text-green-800">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-circle-check text-2xl text-green-600"></i>
+            <!-- Banner Status Lunas -->
+            <div class="bg-gradient-to-r from-emerald-600 to-green-700 text-white rounded-2xl p-5 shadow-md flex flex-col md:flex-row items-center justify-between gap-4 no-print">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-2xl flex-shrink-0">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
                     <div>
-                        <h4 class="font-bold text-sm">Pembayaran Terverifikasi & Pendaftaran Berhasil!</h4>
-                        <p class="text-xs text-green-700">KTA Digital dan Formulir Anda sudah siap diunduh atau dicetak.</p>
+                        <h3 class="font-extrabold text-base sm:text-lg">Pembayaran Lunas! KTA Otomatis Telah Terbit</h3>
+                        <p class="text-xs text-emerald-100">Kartu Tanda Anggota (Depan & Belakang) serta Formulir Pendaftaran siap dicetak atau diunduh.</p>
                     </div>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="downloadPDF()" class="bg-green-700 hover:bg-green-800 text-white text-xs px-4 py-2 rounded-lg font-medium shadow transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-file-pdf"></i> Unduh PDF Form
+                <div class="flex flex-wrap justify-center gap-2">
+                    <button onclick="downloadKtaPdf()" class="bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold text-xs px-4 py-2.5 rounded-xl shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-id-card"></i> Unduh KTA (PDF Siap Cetak)
                     </button>
-                    <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-4 py-2 rounded-lg font-medium shadow transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-print"></i> Cetak / Print
+                    <button onclick="downloadKtaPng()" class="bg-white hover:bg-slate-100 text-emerald-900 font-bold text-xs px-4 py-2.5 rounded-xl shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-image"></i> Unduh KTA (PNG HD)
+                    </button>
+                    <button onclick="downloadFullFormPdf()" class="bg-[#0c3b6e] hover:bg-blue-900 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-pdf"></i> Unduh Formulir (PDF)
+                    </button>
+                    <button onclick="printDocuments()" class="bg-slate-900 hover:bg-black text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-print"></i> Print
                     </button>
                 </div>
             </div>
 
-            <!-- KTA DIGITAL PREVIEW -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
-                <h3 class="text-sm font-bold text-green-700 uppercase mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-id-card"></i> KARTU TANDA ANGGOTA (KTA) DIGITAL RPM
-                </h3>
-
-                <!-- KTA Card Mockup -->
-                <div class="max-w-md mx-auto bg-gradient-to-br from-green-800 via-green-700 to-emerald-900 rounded-2xl shadow-xl text-white p-6 relative overflow-hidden border border-green-600">
-                    <!-- Background Watermark -->
-                    <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
-                        <img src="Logo_Rumah_Pemberdayaan_Masyarakat__1_-removebg-preview(1).png" class="w-64 h-64 object-contain">
+            <!-- PREVIEW KTA DEPAN & BELAKANG (SESUAI MOCKUP HIJAU BIRU) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-6">
+                    <div>
+                        <h3 class="font-extrabold text-slate-800 text-base sm:text-lg uppercase">Kartu Tanda Anggota (KTA) Resmi</h3>
+                        <p class="text-xs text-slate-500">Ukuran Standar ID Card CR80 (85.6mm × 53.98mm) — Tampak Depan & Belakang</p>
                     </div>
+                    <span class="text-xs font-bold bg-blue-50 text-[#0c3b6e] border border-blue-200 px-3 py-1 rounded-full">No. KTA / Formulir: <span id="badgeMemberNo" class="font-mono">RPM/2026/001</span></span>
+                </div>
 
-                    <!-- Card Header -->
-                    <div class="flex items-center justify-between border-b border-green-600/60 pb-3 mb-4">
-                        <div class="flex items-center gap-2.5">
-                            <div class="bg-white p-1 rounded-lg">
-                                <img src="Logo_Rumah_Pemberdayaan_Masyarakat__1_-removebg-preview(1).png" class="h-8 object-contain">
-                            </div>
-                            <div>
-                                <h4 class="text-[11px] font-bold uppercase tracking-wider">RUMAH PEMBERDAYAAN MASYARAKAT</h4>
-                                <p class="text-[9px] text-green-200">KABUPATEN JEPARA</p>
+                <!-- Container Capture KTA Depan & Belakang -->
+                <div class="kta-scale-wrapper">
+                    <div id="ktaCaptureArea" class="flex flex-col xl:flex-row items-center justify-center gap-8 p-4 bg-slate-100/80 rounded-2xl">
+                        
+                        <!-- ==================== KTA TAMPAK DEPAN ==================== -->
+                        <div id="ktaFrontCard" class="kta-card">
+                            <!-- Background SVG Desain Gelombang Hijau, Emas, dan Biru Tua persis Mockup -->
+                            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 540 340" preserveAspectRatio="none">
+                                <defs>
+                                    <linearGradient id="blueHeaderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#093666"/>
+                                        <stop offset="50%" stop-color="#0f5298"/>
+                                        <stop offset="100%" stop-color="#07274a"/>
+                                    </linearGradient>
+                                    <linearGradient id="goldBandGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#eab308"/>
+                                        <stop offset="50%" stop-color="#fde047"/>
+                                        <stop offset="100%" stop-color="#ca8a04"/>
+                                    </linearGradient>
+                                    <linearGradient id="greenWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#15803d"/>
+                                        <stop offset="50%" stop-color="#22c55e"/>
+                                        <stop offset="100%" stop-color="#0f5132"/>
+                                    </linearGradient>
+                                    <linearGradient id="bgLightGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#ffffff"/>
+                                        <stop offset="65%" stop-color="#f8fafc"/>
+                                        <stop offset="100%" stop-color="#e2e8f0"/>
+                                    </linearGradient>
+                                </defs>
+
+                                <!-- Dasar Putih/Silver Halus -->
+                                <rect width="540" height="340" fill="url(#bgLightGrad)"/>
+                                
+                                <!-- Aksen Diagonal Halus di Tengah -->
+                                <polygon points="180,0 420,0 260,340 60,340" fill="#f1f5f9" opacity="0.7"/>
+
+                                <!-- Gelombang Sudut Kiri Atas (Hijau & Emas) -->
+                                <path d="M 0,0 L 65,0 C 30,45 15,90 0,130 Z" fill="url(#goldBandGrad)"/>
+                                <path d="M 0,0 L 52,0 C 22,40 10,80 0,115 Z" fill="url(#greenWaveGrad)"/>
+
+                                <!-- Gelombang Kanan Atas (Emas & Biru Tua Header) -->
+                                <path d="M 245,0 L 540,0 L 540,145 C 430,115 310,85 245,0 Z" fill="url(#goldBandGrad)"/>
+                                <path d="M 262,0 L 540,0 L 540,132 C 435,105 322,78 262,0 Z" fill="url(#blueHeaderGrad)"/>
+
+                                <!-- Gelombang Kanan Tengah (Hijau & Emas Melengkung) -->
+                                <path d="M 430,98 C 485,112 520,130 540,152 L 540,195 C 510,155 470,122 430,98 Z" fill="url(#greenWaveGrad)"/>
+
+                                <!-- Gelombang Bawah (Emas & Hijau Tua) -->
+                                <path d="M 0,260 C 120,305 360,320 540,210 L 540,340 L 0,340 Z" fill="url(#goldBandGrad)"/>
+                                <path d="M 0,272 C 130,315 370,328 540,226 L 540,340 L 0,340 Z" fill="url(#greenWaveGrad)"/>
+                                <path d="M 0,295 C 180,330 390,330 540,255 L 540,340 L 0,340 Z" fill="#0b4628" opacity="0.85"/>
+                            </svg>
+
+                            <!-- Watermark Logo Samar di Kanan Bawah -->
+                            <div class="absolute right-4 bottom-10 w-36 opacity-15 pointer-events-none" id="ktaFrontWatermark"></div>
+
+                            <!-- Konten KTA Depan -->
+                            <div class="relative z-10 h-full flex flex-col justify-between p-3.5">
+                                
+                                <!-- Baris Atas: Logo Kiri & Judul Yayasan Kanan -->
+                                <div class="flex items-start justify-between">
+                                    <!-- Logo RPM Kiri Atas -->
+                                    <div class="w-44 pl-2 pt-0.5" id="ktaFrontLogo"></div>
+                                    
+                                    <!-- Teks Yayasan Kanan Atas -->
+                                    <div class="text-right text-white pr-1 pt-0.5 max-w-[275px]">
+                                        <h4 class="font-extrabold text-[13px] leading-tight tracking-wide drop-shadow">
+                                            YAYASAN<br>RUMAH PEMBERDAYAAN<br>MASYARAKAT (RPM)
+                                        </h4>
+                                        <p class="text-[8px] text-blue-100 mt-0.5 font-medium">
+                                            Kelet, Kecamatan Keling, Kabupaten Jepara, Jawa Tengah
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Baris Tengah: Bingkai Pas Foto & Biodata -->
+                                <div class="flex items-center gap-3.5 px-2 my-auto">
+                                    <!-- Bingkai Pas Foto 3x4 -->
+                                    <div class="w-[104px] h-[136px] rounded-xl border-[3px] border-[#0c3b6e] bg-slate-200 shadow-md overflow-hidden flex-shrink-0 relative">
+                                        <img id="ktaCardPhoto" src="" alt="Pas Foto" class="w-full h-full object-cover">
+                                    </div>
+
+                                    <!-- Kolom Kanan: Banner KTA + Data -->
+                                    <div class="flex-grow flex flex-col">
+                                        <!-- Banner Pil Biru Tua -->
+                                        <div class="bg-[#092e57] text-white rounded-xl py-1 px-3 text-center shadow-sm border border-blue-400/30 mb-1 w-[265px]">
+                                            <div class="font-extrabold text-[11.5px] tracking-wider leading-none">KARTU TANDA ANGGOTA</div>
+                                            <div class="flex items-center justify-center gap-2 mt-0.5">
+                                                <span class="h-[1.5px] w-9 bg-amber-400 inline-block"></span>
+                                                <span class="font-extrabold text-[10.5px] tracking-[0.25em] leading-none text-white">( K T A )</span>
+                                                <span class="h-[1.5px] w-9 bg-amber-400 inline-block"></span>
+                                            </div>
+                                            <div class="text-[8.5px] font-mono font-bold text-amber-300 tracking-wider mt-0.5 leading-none">
+                                                NO. KTA: <span id="cardNoKta">RPM/2026/001</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Tabel Data Anggota -->
+                                        <table class="w-full text-[9px] leading-[1.26] text-[#092e57] font-bold">
+                                            <tr>
+                                                <td class="w-[92px] align-top">Nama Lengkap</td>
+                                                <td class="w-2.5 align-top">:</td>
+                                                <td id="cardNama" class="uppercase font-extrabold text-slate-900 truncate max-w-[235px]">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="align-top">NIK</td>
+                                                <td class="align-top">:</td>
+                                                <td id="cardNik" class="font-mono text-slate-900">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="align-top">Tempat, Tgl. Lahir</td>
+                                                <td class="align-top">:</td>
+                                                <td id="cardTtl" class="text-slate-900">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="align-top">Jenis Kelamin</td>
+                                                <td class="align-top">:</td>
+                                                <td id="cardGender" class="text-slate-900">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="align-top">Gol. Darah</td>
+                                                <td class="align-top">:</td>
+                                                <td id="cardGoldar" class="text-slate-900">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="align-top">Alamat</td>
+                                                <td class="align-top">:</td>
+                                                <td id="cardAlamat" class="text-slate-900 line-clamp-2 leading-[1.2] max-w-[235px]">-</td>
+                                            </tr>
+                                        </table>
+
+                                        <!-- Garis Pemisah Emas Tipis -->
+                                        <div class="h-[1px] bg-amber-500/80 w-[230px] my-1"></div>
+
+                                        <table class="w-full text-[9.5px] leading-[1.3] text-[#092e57] font-bold">
+                                            <tr>
+                                                <td class="w-[92px]">No. HP / WA</td>
+                                                <td class="w-2.5">:</td>
+                                                <td id="cardHp" class="text-slate-900">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Pekerjaan</td>
+                                                <td>:</td>
+                                                <td id="cardPekerjaan" class="text-slate-900">-</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Footer Bar KTA Depan -->
+                                <div class="bg-[#083b24] border border-amber-400 rounded-full px-3.5 py-1 flex items-center justify-between text-white text-[8.5px] shadow">
+                                    <div class="flex items-center gap-1.5">
+                                        <i class="fa-solid fa-globe text-blue-300 text-[10px]"></i>
+                                        <span class="font-medium tracking-tight">www.rumahpemberdayaanmasyarakat.com</span>
+                                    </div>
+                                    <div class="flex items-center gap-1 border-x border-white/30 px-2.5">
+                                        <span class="w-3.5 h-3.5 rounded-full bg-blue-600 flex items-center justify-center text-[7px]"><i class="fa-brands fa-facebook-f"></i></span>
+                                        <span class="w-3.5 h-3.5 rounded-full bg-black flex items-center justify-center text-[7px]"><i class="fa-brands fa-tiktok"></i></span>
+                                        <span class="w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-amber-500 to-pink-600 flex items-center justify-center text-[7px]"><i class="fa-brands fa-instagram"></i></span>
+                                        <span class="w-3.5 h-3.5 rounded-full bg-red-600 flex items-center justify-center text-[7px]"><i class="fa-brands fa-youtube"></i></span>
+                                    </div>
+                                    <div class="font-semibold tracking-tight">
+                                        Rumah Pemberdayaan Masyarakat
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <span class="text-[10px] bg-amber-400 text-slate-900 font-extrabold px-2 py-0.5 rounded uppercase">KTA RESMI</span>
-                    </div>
 
-                    <!-- Card Body -->
-                    <div class="flex gap-4 items-center">
-                        <div class="w-24 h-32 bg-slate-200 rounded-lg overflow-hidden border-2 border-white/80 shadow-md flex-shrink-0">
-                            <img id="ktaFoto" src="https://placehold.co/150x200/cccccc/ffffff?text=Foto" class="w-full h-full object-cover">
-                        </div>
-                        <div class="space-y-1 text-xs w-full">
-                            <div>
-                                <span class="text-[10px] text-green-200 uppercase block">Nama Lengkap</span>
-                                <span id="ktaNama" class="font-bold text-sm leading-tight block">--</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-green-200 uppercase block">NIK</span>
-                                <span id="ktaNik" class="font-mono text-xs">--</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-green-200 uppercase block">Bidang / Divisi</span>
-                                <span id="ktaDivisi" class="font-medium text-amber-300">--</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-green-200 uppercase block">No. Anggota</span>
-                                <span id="ktaNo" class="font-mono text-xs">RPM-2026-00192</span>
-                            </div>
-                        </div>
-                    </div>
+                        <!-- ==================== KTA TAMPAK BELAKANG ==================== -->
+                        <div id="ktaBackCard" class="kta-card">
+                            <!-- Background SVG KTA Belakang persis Mockup -->
+                            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 540 340" preserveAspectRatio="none">
+                                <rect width="540" height="340" fill="url(#bgLightGrad)"/>
+                                <polygon points="150,0 400,0 240,340 40,340" fill="#f1f5f9" opacity="0.7"/>
+                                
+                                <!-- Gelombang Sudut Kiri Atas -->
+                                <path d="M 0,0 L 65,0 C 30,45 15,90 0,130 Z" fill="url(#goldBandGrad)"/>
+                                <path d="M 0,0 L 52,0 C 22,40 10,80 0,115 Z" fill="url(#greenWaveGrad)"/>
 
-                    <!-- Card Footer -->
-                    <div class="mt-4 pt-3 border-t border-green-600/60 flex justify-between items-center text-[10px] text-green-200">
-                        <div>Ketua Umum RPM<br><strong class="text-white">Kelet, Keling, Jepara</strong></div>
-                        <div class="bg-white p-1 rounded">
-                            <canvas id="ktaBarCode" class="w-12 h-12"></canvas>
+                                <!-- Gelombang Bawah -->
+                                <path d="M 0,260 C 120,305 360,320 540,210 L 540,340 L 0,340 Z" fill="url(#goldBandGrad)"/>
+                                <path d="M 0,272 C 130,315 370,328 540,226 L 540,340 L 0,340 Z" fill="url(#greenWaveGrad)"/>
+                                <path d="M 0,295 C 180,330 390,330 540,255 L 540,340 L 0,340 Z" fill="#0b4628" opacity="0.85"/>
+                            </svg>
+
+                            <!-- Konten KTA Belakang -->
+                            <div class="relative z-10 h-full flex flex-col justify-between p-3.5">
+                                
+                                <!-- Baris Atas: Logo + Kaligrafi + QR Code Box -->
+                                <div class="flex items-start justify-between pt-1 px-1">
+                                    <!-- Kiri: Logo + Slogan Script -->
+                                    <div class="flex flex-col">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-40" id="ktaBackLogo"></div>
+                                            <div class="h-12 w-[2px] bg-amber-500"></div>
+                                            <div>
+                                                <p class="font-script text-[#0c3b6e] text-[22px] leading-[1.05] font-bold">
+                                                    Bersama Membangun<br>Masyarakat Sejahtera
+                                                </p>
+                                                <div class="h-[2px] w-36 bg-gradient-to-r from-amber-400 to-transparent mt-1 rounded-full"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Ketentuan Kartu Anggota -->
+                                        <div class="mt-3 pl-1">
+                                            <div class="inline-block bg-[#092e57] text-white font-bold text-[11px] px-4 py-1 rounded-full mb-2 shadow-sm">
+                                                Ketentuan Kartu Anggota :
+                                            </div>
+                                            <ol class="list-decimal list-outside ml-4 text-[10px] font-semibold text-slate-800 space-y-1 max-w-[360px] leading-snug">
+                                                <li>KTA ini adalah identitas resmi anggota RPM.</li>
+                                                <li>Harap dibawa setiap kegiatan yang diselenggarakan oleh RPM.</li>
+                                                <li>Jangan disalahgunakan dan dilarang memberikan kepada pihak lain.</li>
+                                                <li>KTA ini berlaku selama menjadi anggota dan dapat dicabut apabila melanggar ketentuan organisasi.</li>
+                                            </ol>
+                                        </div>
+                                    </div>
+
+                                    <!-- Kanan Atas: Kotak QR Code -->
+                                    <div class="bg-[#092e57] p-1.5 rounded-2xl shadow-md flex flex-col items-center border-2 border-[#092e57] flex-shrink-0">
+                                        <div class="bg-white p-1.5 rounded-xl">
+                                            <canvas id="ktaMemberQrCanvas" class="w-[86px] h-[86px]"></canvas>
+                                        </div>
+                                        <span class="text-white font-bold text-[8.5px] leading-tight text-center mt-1 px-1">
+                                            Scan Untuk<br>Informasi
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Footer Bar KTA Belakang -->
+                                <div class="bg-[#083b24] border border-amber-400 rounded-full px-3.5 py-1 flex items-center justify-between text-white text-[8.5px] shadow">
+                                    <div class="flex items-center gap-1.5">
+                                        <i class="fa-solid fa-globe text-blue-300 text-[10px]"></i>
+                                        <span class="font-medium tracking-tight">www.rumahpemberdayaanmasyarakat.com</span>
+                                    </div>
+                                    <div class="flex items-center gap-1 border-x border-white/30 px-2.5">
+                                        <span class="w-3.5 h-3.5 rounded-full bg-blue-600 flex items-center justify-center text-[7px]"><i class="fa-brands fa-facebook-f"></i></span>
+                                        <span class="w-3.5 h-3.5 rounded-full bg-black flex items-center justify-center text-[7px]"><i class="fa-brands fa-tiktok"></i></span>
+                                        <span class="w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-amber-500 to-pink-600 flex items-center justify-center text-[7px]"><i class="fa-brands fa-instagram"></i></span>
+                                        <span class="w-3.5 h-3.5 rounded-full bg-red-600 flex items-center justify-center text-[7px]"><i class="fa-brands fa-youtube"></i></span>
+                                    </div>
+                                    <div class="font-semibold tracking-tight">
+                                        Rumah Pemberdayaan Masyarakat
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- PREVIEW FORMULIR A4 SIAP CETAK / PDF -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-6 no-print">
+                    <div>
+                        <h3 class="font-extrabold text-slate-800 text-base sm:text-lg uppercase">Arsip Formulir Pendaftaran (Format A4)</h3>
+                        <p class="text-xs text-slate-500">Dokumen resmi terisi otomatis sesuai data pendaftaran Anda.</p>
+                    </div>
+                    <button onclick="downloadFullFormPdf()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-download"></i> Unduh PDF Formulir
+                    </button>
+                </div>
+
+                <!-- Wrapper Scrollable untuk A4 -->
+                <div class="w-full overflow-x-auto flex justify-center bg-slate-100 p-4 rounded-2xl">
+                    <div id="a4FormPrintArea" class="a4-form-sheet">
+                        <!-- Kop Surat A4 -->
+                        <div class="flex items-center justify-between gap-4 pb-3">
+                            <div class="w-56" id="a4LogoBox"></div>
+                            <div class="text-center flex-grow">
+                                <h1 class="text-[19px] font-extrabold text-[#0c3b6e] leading-tight tracking-wide">
+                                    YAYASAN<br>RUMAH PEMBERDAYAAN MASYARAKAT<br>(RPM)
+                                </h1>
+                                <p class="text-xs text-slate-700 mt-1">Kelet, Kecamatan Keling, Kabupaten Jepara, Jawa Tengah</p>
+                            </div>
+                        </div>
+                        <!-- Garis Ganda Kop -->
+                        <div class="border-t-[3px] border-[#0c3b6e] mb-[2px]"></div>
+                        <div class="border-t-[1.5px] border-amber-500 mb-6"></div>
+
+                        <!-- Judul Formulir -->
+                        <div class="text-center mb-6">
+                            <h2 class="text-[16px] font-extrabold text-[#0c3b6e] uppercase underline decoration-[#0c3b6e] decoration-2 underline-offset-4">
+                                FORMULIR PENDAFTARAN KTA, KAOS KERAH DAN TOPI
+                            </h2>
+                            <p class="text-xs font-mono font-bold text-slate-800 mt-1.5">
+                                No. Formulir / No. KTA : <span id="pdfNoFormulir" class="underline decoration-dotted">RPM/2026/001</span>
+                            </p>
+                        </div>
+
+                        <!-- A. Data Anggota -->
+                        <div class="mb-6">
+                            <h3 class="font-bold text-sm text-slate-900 mb-3">A. Data Anggota</h3>
+                            <div class="flex gap-6">
+                                <table class="w-full text-[13px] text-slate-800">
+                                    <tr>
+                                        <td class="py-1.5 w-40">Nama Lengkap</td>
+                                        <td class="w-4">:</td>
+                                        <td><span id="pdfNama" class="dotted-line"></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1.5">NIK</td>
+                                        <td>:</td>
+                                        <td><span id="pdfNik" class="dotted-line font-mono"></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1.5">Tempat, Tgl. Lahir</td>
+                                        <td>:</td>
+                                        <td><span id="pdfTtl" class="dotted-line"></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1.5">Jenis Kelamin</td>
+                                        <td>:</td>
+                                        <td><span id="pdfGender" class="dotted-line"></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1.5">Gol. Darah</td>
+                                        <td>:</td>
+                                        <td><span id="pdfGoldar" class="dotted-line"></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-1.5 align-top">Alamat</td>
+                                        <td class="align-top">:</td>
+                                        <td><span id="pdfAlamat" class="dotted-line leading-relaxed"></span></td>
+                                    </tr>
+                                </table>
+
+                                <!-- Kotak Pas Foto 3x4 -->
+                                <div class="w-[115px] h-[150px] border border-slate-800 flex-shrink-0 flex items-center justify-center overflow-hidden bg-slate-50 mt-1">
+                                    <img id="pdfPhoto" src="" alt="Pas Foto 3x4" class="w-full h-full object-cover">
+                                </div>
+                            </div>
+
+                            <table class="w-full text-[13px] text-slate-800 mt-1">
+                                <tr>
+                                    <td class="py-1.5 w-40">No. HP / WA</td>
+                                    <td class="w-4">:</td>
+                                    <td><span id="pdfHp" class="dotted-line"></span></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1.5">Pekerjaan</td>
+                                    <td>:</td>
+                                    <td><span id="pdfPekerjaan" class="dotted-line"></span></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1.5">Bidang / Divisi</td>
+                                    <td>:</td>
+                                    <td><span id="pdfDivisi" class="dotted-line"></span></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- B. Permohonan -->
+                        <div class="mb-6">
+                            <h3 class="font-bold text-sm text-slate-900 mb-3">B. Permohonan (centang yang diperlukan)</h3>
+                            <div class="flex items-center gap-10 text-[13px] pl-1">
+                                <div class="flex items-center gap-2">
+                                    <span id="pdfBoxKta" class="w-4 h-4 border border-slate-800 inline-flex items-center justify-center font-bold text-xs">✓</span>
+                                    <span>Kartu Tanda Anggota (KTA)</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span id="pdfBoxKaos" class="w-4 h-4 border border-slate-800 inline-flex items-center justify-center font-bold text-xs">✓</span>
+                                    <span>Kaos Kerah</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span id="pdfBoxTopi" class="w-4 h-4 border border-slate-800 inline-flex items-center justify-center font-bold text-xs">✓</span>
+                                    <span>Topi</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- C. Ukuran Kaos Kerah -->
+                        <div class="mb-6">
+                            <h3 class="font-bold text-sm text-slate-900 mb-3">C. Ukuran Kaos Kerah</h3>
+                            <div class="flex items-center gap-6 text-[13px] pl-1 mb-3">
+                                <span class="w-24">Ukuran :</span>
+                                <div class="flex items-center gap-1.5"><span id="pdfSizeS" class="w-4 h-4 border border-slate-800 inline-flex items-center justify-center font-bold text-xs"></span> S</div>
+                                <div class="flex items-center gap-1.5"><span id="pdfSizeM" class="w-4 h-4 border border-slate-800 inline-flex items-center justify-center font-bold text-xs"></span> M</div>
+                                <div class="flex items-center gap-1.5"><span id="pdfSizeL" class="w-4 h-4 border border-slate-800 inline-flex items-center justify-center font-bold text-xs"></span> L</div>
+                                <div class="flex items-center gap-1.5"><span id="pdfSizeXL" class="w-4 h-4 border border-slate-800 inline-flex items-center justify-center font-bold text-xs"></span> XL</div>
+                                <div class="flex items-center gap-1.5"><span id="pdfSizeXXL" class="w-4 h-4 border border-slate-800 inline-flex items-center justify-center font-bold text-xs"></span> XXL</div>
+                                <div class="flex items-center gap-1.5"><span id="pdfSizeXXXL" class="w-4 h-4 border border-slate-800 inline-flex items-center justify-center font-bold text-xs"></span> XXXL</div>
+                            </div>
+                            <div class="flex items-center text-[13px] pl-1">
+                                <span class="w-28 flex-shrink-0">Catatan lain :</span>
+                                <span id="pdfCatatan" class="dotted-line"></span>
+                            </div>
+                        </div>
+
+                        <!-- D. Biaya Pembuatan -->
+                        <div class="mb-6">
+                            <h3 class="font-bold text-sm text-slate-900 mb-2">D. Biaya Pembuatan KTA, Kaos Kerah dan Topi</h3>
+                            <table class="text-[13px] text-slate-800 pl-1">
+                                <tr>
+                                    <td class="py-1 w-40">Nominal minimal</td>
+                                    <td class="w-4">:</td>
+                                    <td class="font-bold">Rp 150.000,-</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1">Nominal dibayar</td>
+                                    <td>:</td>
+                                    <td><span id="pdfNominal" class="font-bold text-emerald-800 border-b border-dotted border-slate-700 pr-8">Rp 150.000,-</span> <span id="pdfStatusLunas" class="ml-2 text-xs font-bold text-emerald-700">[LUNAS VIA QRIS]</span></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <p class="text-[13px] text-slate-800 mb-8">
+                            Dengan ini saya menyatakan data di atas benar dan bersedia menjaga nama baik RPM.
+                        </p>
+
+                        <!-- Tanda Tangan -->
+                        <div class="grid grid-cols-2 text-[13px] text-slate-800 mt-6">
+                            <div class="pl-6">
+                                <p class="mb-20">Mengetahui,<br>Pengurus RPM</p>
+                                <p>( ........................................... )</p>
+                            </div>
+                            <div class="pl-16">
+                                <p class="mb-20">Kelet, <span id="pdfTanggal">12 November 2026</span><br>Pemohon,</p>
+                                <p class="font-bold">( <span id="pdfSignNama">...........................................</span> )</p>
+                            </div>
+                        </div>
+
+                        <!-- Garis Bawah Halaman A4 -->
+                        <div class="absolute bottom-0 left-0 right-0">
+                            <div class="h-1 bg-amber-500"></div>
+                            <div class="h-2.5 bg-[#0c3b6e]"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- PRINTABLE FORMULIR SECTION (Hidden until print or PDF) -->
-            <div id="printArea" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-6">
-                <div class="flex items-center justify-between border-b pb-4">
-                    <div class="flex items-center gap-3">
-                        <img src="Logo_Rumah_Pemberdayaan_Masyarakat__1_-removebg-preview(1).png" class="h-12 object-contain">
-                        <div>
-                            <h2 class="text-sm font-bold text-green-800 uppercase">YAYASAN RUMAH PEMBERDAYAAN MASYARAKAT (RPM)</h2>
-                            <p class="text-xs text-slate-500">Kelet, Kecamatan Keling, Kabupaten Jepara, Jawa Tengah</p>
-                        </div>
-                    </div>
-                    <div class="text-right text-xs text-slate-500 font-mono">
-                        No: REG/RPM/2026/0491
-                    </div>
-                </div>
-
-                <div class="text-center">
-                    <h3 class="text-base font-bold text-slate-800 uppercase underline decoration-green-600 underline-offset-4">FORMULIR PENDAFTARAN KTA, KAOS KERAH DAN TOPI</h3>
-                </div>
-
-                <!-- A. Data Anggota -->
-                <div class="space-y-2 text-sm">
-                    <h4 class="font-bold text-green-700 bg-slate-100 p-1.5 rounded text-xs uppercase">A. Data Anggota</h4>
-                    <table class="w-full text-xs space-y-1">
-                        <tr><td class="py-1 w-1/4 text-slate-500">Nama Lengkap</td><td class="w-2">:</td><td id="resNama" class="font-bold">--</td><td rowspan="7" class="w-32 align-top text-center"><div class="w-24 h-32 border border-slate-300 mx-auto overflow-hidden rounded"><img id="resFoto" src="" class="w-full h-full object-cover"></div><span class="text-[9px] text-slate-400 mt-1 block">Pas foto 3x4</span></td></tr>
-                        <tr><td class="py-1 text-slate-500">NIK</td><td>:</td><td id="resNik">--</td></tr>
-                        <tr><td class="py-1 text-slate-500">Tempat, Tgl. Lahir</td><td>:</td><td id="resTtl">--</td></tr>
-                        <tr><td class="py-1 text-slate-500">Jenis Kelamin</td><td>:</td><td id="resGender">--</td></tr>
-                        <tr><td class="py-1 text-slate-500">Gol. Darah</td><td>:</td><td id="resGoldar">--</td></tr>
-                        <tr><td class="py-1 text-slate-500">Alamat</td><td>:</td><td id="resAlamat">--</td></tr>
-                        <tr><td class="py-1 text-slate-500">No. HP / WA</td><td>:</td><td id="resPhone">--</td></tr>
-                        <tr><td class="py-1 text-slate-500">Pekerjaan</td><td>:</td><td id="resPekerjaan" colspan="2">--</td></tr>
-                        <tr><td class="py-1 text-slate-500">Bidang / Divisi</td><td>:</td><td id="resDivisi" colspan="2">--</td></tr>
-                    </table>
-                </div>
-
-                <!-- B. Permohonan -->
-                <div class="space-y-2 text-sm">
-                    <h4 class="font-bold text-green-700 bg-slate-100 p-1.5 rounded text-xs uppercase">B. Permohonan</h4>
-                    <div class="text-xs flex gap-6">
-                        <span>[ <span id="checkKta">v</span> ] Kartu Tanda Anggota (KTA)</span>
-                        <span>[ <span id="checkKaos">v</span> ] Kaos Kerah</span>
-                        <span>[ <span id="checkTopi">v</span> ] Topi</span>
-                    </div>
-                </div>
-
-                <!-- C. Ukuran Kaos -->
-                <div class="space-y-2 text-sm">
-                    <h4 class="font-bold text-green-700 bg-slate-100 p-1.5 rounded text-xs uppercase">C. Ukuran Kaos Kerah</h4>
-                    <div class="text-xs flex gap-6 items-center">
-                        <span>Ukuran: <strong id="resUkuran" class="text-green-700 text-sm">L</strong></span>
-                        <span>Catatan: <span id="resCatatan" class="italic text-slate-600">-</span></span>
-                    </div>
-                </div>
-
-                <!-- D. Biaya -->
-                <div class="space-y-2 text-sm">
-                    <h4 class="font-bold text-green-700 bg-slate-100 p-1.5 rounded text-xs uppercase">D. Biaya Pembuatan</h4>
-                    <div class="text-xs grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded">
-                        <div>Nominal Minimal : <strong>Rp 150.000,-</strong></div>
-                        <div>Nominal Dibayar : <strong id="resBayar" class="text-green-700">Rp 150.000,- (Lunas Qris)</strong></div>
-                    </div>
-                </div>
-
-                <div class="text-xs italic text-slate-600">
-                    Dengan ini saya menyatakan data di atas benar dan bersedia menjaga nama baik RPM.
-                </div>
-
-                <!-- Signatures -->
-                <div class="grid grid-cols-2 pt-8 text-xs text-center">
-                    <div>
-                        <p class="mb-16">Mengetahui,<br>Pengurus RPM</p>
-                        <p class="font-bold">( ....................................... )</p>
-                    </div>
-                    <div>
-                        <p class="mb-1 mb-16">Kelet, <span id="currentDate">12 November 2026</span><br>Pemohon,</p>
-                        <p class="font-bold">( <span id="signNama">.......................................</span> )</p>
-                    </div>
-                </div>
-            </div>
         </section>
 
     </main>
 
-    <!-- Footer -->
-    <footer class="text-center py-6 text-xs text-slate-400 no-print">
-        &copy; 2026 Yayasan Rumah Pemberdayaan Masyarakat (RPM). All Rights Reserved.
+    <!-- Area Tersembunyi Khusus untuk Print -->
+    <div id="print-target" class="hidden"></div>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-5 text-center text-xs text-slate-500 no-print">
+        <p class="font-semibold text-slate-700">Yayasan Rumah Pemberdayaan Masyarakat (RPM) Indonesia</p>
+        <p class="mt-0.5">Kelet, Kecamatan Keling, Kabupaten Jepara, Jawa Tengah • www.rumahpemberdayaanmasyarakat.com</p>
     </footer>
 
-    <!-- JavaScript Logic -->
+    <!-- JAVASCRIPT LOGIC -->
     <script>
-        let globalFormData = {};
+        // =========================================================================
+        // 1. MASTER SVG LOGO RUMAH PEMBERDAYAAN MASYARAKAT (PRESISI VEKTOR)
+        // =========================================================================
+        const RPM_LOGO_SVG = `
+        <svg viewBox="0 0 420 145" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+            <!-- Atap Rumah Hijau -->
+            <path d="M 15,58 L 88,10 L 161,58 L 143,58 L 88,22 L 33,58 Z" fill="#15803d"/>
+            <!-- Jendela 4 Kotak di Atap -->
+            <rect x="78" y="34" width="8" height="8" fill="#15803d"/>
+            <rect x="89" y="34" width="8" height="8" fill="#15803d"/>
+            <rect x="78" y="45" width="8" height="8" fill="#15803d"/>
+            <rect x="89" y="45" width="8" height="8" fill="#15803d"/>
 
-        // Generate QRIS code on load
-        window.onload = function() {
-            // QRIS QR Code simulation
-            new QRious({
-                element: document.getElementById('qrisCanvas'),
-                value: '00020101021126680016ID.CO.QRIS.WWW01189360091430000010303UMI0215260193847561953033605802ID5926RUMAH PEMBERDAYAAN MASYARAKAT6005JEPARA6304',
-                size: 180,
-                background: 'white',
-                foreground: '#166534'
-            });
+            <!-- Figur Tengah (Biru Tua) -->
+            <circle cx="88" cy="65" r="10" fill="#0c3b6e"/>
+            <path d="M 60,55 C 72,72 104,72 116,55 C 110,80 96,88 96,115 L 80,115 C 80,88 66,80 60,55 Z" fill="#0c3b6e"/>
 
-            // Set default date
-            const options = { day: 'numeric', month: 'long', year: 'numeric' };
-            document.getElementById('currentDate').innerText = new Date().toLocaleDateString('id-ID', options);
+            <!-- Figur Kiri (Hijau) & Bola Oranye -->
+            <circle cx="52" cy="75" r="8" fill="#16a34a"/>
+            <circle cx="36" cy="63" r="5" fill="#f59e0b"/>
+            <path d="M 30,68 C 40,82 62,85 72,76 C 65,92 58,98 58,116 L 44,116 C 44,98 35,88 30,68 Z" fill="#16a34a"/>
+
+            <!-- Figur Kanan (Hijau Limau) & Bola Oranye -->
+            <circle cx="124" cy="75" r="8" fill="#65a30d"/>
+            <circle cx="140" cy="63" r="5" fill="#f59e0b"/>
+            <path d="M 146,68 C 136,82 114,85 104,76 C 111,92 118,98 118,116 L 132,116 C 132,98 141,88 146,68 Z" fill="#65a30d"/>
+
+            <!-- Lengkungan Tanah Bawah -->
+            <path d="M 15,134 C 55,112 115,112 155,126 C 115,118 65,120 15,134 Z" fill="#65a30d"/>
+            <path d="M 25,138 C 70,118 125,118 165,134 C 120,124 72,126 25,138 Z" fill="#15803d"/>
+
+            <!-- Garis Vertikal Pemisah -->
+            <rect x="172" y="16" width="3" height="104" rx="1.5" fill="#15803d"/>
+
+            <!-- Teks Utama -->
+            <text x="184" y="45" font-family="Inter, sans-serif" font-weight="800" font-size="31" fill="#15803d" letter-spacing="-0.5">Rumah</text>
+            <text x="184" y="77" font-family="Inter, sans-serif" font-weight="800" font-size="28" fill="#15803d" letter-spacing="-0.5">Pemberdayaan</text>
+            <text x="184" y="109" font-family="Inter, sans-serif" font-weight="800" font-size="30" fill="#15803d" letter-spacing="-0.5">Masyarakat</text>
+
+            <!-- Tagline Bawah -->
+            <rect x="184" y="124" width="16" height="2.5" rx="1" fill="#15803d"/>
+            <text x="205" y="129" font-family="Inter, sans-serif" font-style="italic" font-weight="700" font-size="11.5" fill="#0c3b6e">Bersama Berdaya Menuju Sejahtera</text>
+            <rect x="398" y="124" width="16" height="2.5" rx="1" fill="#15803d"/>
+        </svg>`;
+
+        // State Aplikasi
+        const appState = {
+            currentStep: 1,
+            isPaid: false,
+            memberNo: 'RPM/' + new Date().getFullYear() + '/' + String(Math.floor(1 + Math.random() * 899)).padStart(3, '0'),
+            invoiceNo: 'INV-RPM-' + Math.floor(100000 + Math.random() * 900000),
+            photoDataUrl: '',
+            data: {}
         };
 
-        function switchTab(tabId) {
-            document.getElementById('section-form').classList.add('hidden');
-            document.getElementById('section-qris').classList.add('hidden');
-            document.getElementById('section-kta').classList.add('hidden');
+        let countdownInterval = null;
 
-            document.getElementById('tab-form').className = "py-3 px-6 font-semibold text-slate-500 hover:text-green-700 flex items-center gap-2 transition border-b-2 border-transparent";
-            document.getElementById('tab-qris').className = "py-3 px-6 font-semibold text-slate-500 hover:text-green-700 flex items-center gap-2 transition border-b-2 border-transparent";
-            document.getElementById('tab-kta').className = "py-3 px-6 font-semibold text-slate-500 hover:text-green-700 flex items-center gap-2 transition border-b-2 border-transparent";
+        // =========================================================================
+        // 2. INISIALISASI SAAT HALAMAN DIMUAT
+        // =========================================================================
+        window.onload = function () {
+            // Render semua instance logo SVG
+            ['headerLogoContainer', 'formHeaderLogo', 'ktaFrontLogo', 'ktaBackLogo', 'ktaFrontWatermark', 'a4LogoBox'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = RPM_LOGO_SVG;
+            });
 
-            if(tabId === 'form') {
-                document.getElementById('section-form').classList.remove('hidden');
-                document.getElementById('tab-form').className = "py-3 px-6 font-semibold text-green-700 border-b-2 border-green-600 flex items-center gap-2 transition";
-            } else if(tabId === 'qris') {
-                document.getElementById('section-qris').classList.remove('hidden');
-                document.getElementById('tab-qris').className = "py-3 px-6 font-semibold text-green-700 border-b-2 border-green-600 flex items-center gap-2 transition";
-            } else if(tabId === 'kta') {
-                document.getElementById('section-kta').classList.remove('hidden');
-                document.getElementById('tab-kta').className = "py-3 px-6 font-semibold text-green-700 border-b-2 border-green-600 flex items-center gap-2 transition";
+            // Set tanggal hari ini
+            const todayStr = new Date().toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+            document.getElementById('formDatePreview').innerText = todayStr;
+            document.getElementById('pdfTanggal').innerText = todayStr;
+            document.getElementById('inNoFormulir').value = appState.memberNo;
+            syncFormNumberLive();
+
+            // Set foto avatar default SVG
+            useSampleAvatar(false);
+        };
+
+        function syncFormNumberLive() {
+            const val = document.getElementById('inNoFormulir').value.trim() || appState.memberNo;
+            appState.memberNo = val;
+            document.getElementById('badgeMemberNo').innerText = val;
+            document.getElementById('cardNoKta').innerText = val;
+            document.getElementById('pdfNoFormulir').innerText = val;
+            document.getElementById('qrisNoFormulir').innerText = val;
+        }
+
+        function regenerateFormNumber() {
+            const newNo = 'RPM/' + new Date().getFullYear() + '/' + String(Math.floor(1 + Math.random() * 999)).padStart(3, '0');
+            document.getElementById('inNoFormulir').value = newNo;
+            syncFormNumberLive();
+            showToast(`Nomor Formulir & KTA diperbarui: ${newNo}`, 'info');
+        }
+
+        // =========================================================================
+        // 4. NAVIGASI TAHAPAN (STEPPER)
+        // =========================================================================
+        function navigateStep(step) {
+            if (step === 2 && !collectFormData(true)) {
+                return;
             }
+            if (step === 3 && !appState.isPaid) {
+                showToast('Silakan selesaikan pembayaran QRIS terlebih dahulu untuk menerbitkan KTA.', 'error');
+                if (collectFormData(true)) navigateStep(2);
+                return;
+            }
+
+            appState.currentStep = step;
+
+            // Sembunyikan semua section
+            document.getElementById('step1Section').classList.add('hidden');
+            document.getElementById('step2Section').classList.add('hidden');
+            document.getElementById('step3Section').classList.add('hidden');
+
+            // Reset style tombol stepper
+            [1, 2, 3].forEach(num => {
+                const btn = document.getElementById('stepBtn' + num);
+                const badge = btn.querySelector('span:first-child');
+                if (num === step) {
+                    btn.className = 'flex items-center justify-center sm:justify-start gap-2.5 p-2.5 rounded-xl border-2 border-emerald-600 bg-emerald-50/70 text-emerald-800 font-bold text-xs sm:text-sm transition';
+                    badge.className = 'w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs flex-shrink-0';
+                } else if (num < step || (num === 3 && appState.isPaid)) {
+                    btn.className = 'flex items-center justify-center sm:justify-start gap-2.5 p-2.5 rounded-xl border-2 border-emerald-200 bg-white text-emerald-700 font-semibold text-xs sm:text-sm transition';
+                    badge.className = 'w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs flex-shrink-0';
+                } else {
+                    btn.className = 'flex items-center justify-center sm:justify-start gap-2.5 p-2.5 rounded-xl border-2 border-slate-200 bg-white text-slate-500 font-semibold text-xs sm:text-sm transition';
+                    badge.className = 'w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs flex-shrink-0';
+                }
+            });
+
+            document.getElementById(`step${step}Section`).classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function previewFoto(event) {
+        // =========================================================================
+        // 5. PENGOLAHAN FOTO & DATA FORMULIR
+        // =========================================================================
+        function handlePhotoUpload(event) {
             const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.getElementById('imgPreview');
-                    img.src = e.target.result;
-                    img.classList.remove('hidden');
-                    document.getElementById('placeholderText').classList.add('hidden');
-                    globalFormData.foto = e.target.result;
+            if (!file) return;
+
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Ukuran foto maksimal 5MB.', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                appState.photoDataUrl = e.target.result;
+                const preview = document.getElementById('fotoPreviewBox');
+                preview.src = appState.photoDataUrl;
+                preview.classList.remove('hidden');
+                document.getElementById('fotoPlaceholder').classList.add('hidden');
+                showToast('Pas foto berhasil diunggah!', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function useSampleAvatar(notify = true) {
+            // Membuat gambar SVG Pas Foto Formal Latar Merah/Biru sebagai Data URL
+            const svgAvatar = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400">
+                <rect width="300" height="400" fill="#b91c1c"/>
+                <circle cx="150" cy="145" r="58" fill="#fed7aa"/>
+                <path d="M 92,135 C 92,85 208,85 208,135 C 208,110 185,95 150,95 C 115,95 92,110 92,135 Z" fill="#1e293b"/>
+                <path d="M 55,400 C 55,285 95,245 150,245 C 205,245 245,285 245,400 Z" fill="#0f172a"/>
+                <polygon points="150,245 125,310 150,335 175,310" fill="#ffffff"/>
+                <polygon points="150,260 142,325 150,340 158,325" fill="#0c3b6e"/>
+            </svg>`;
+            appState.photoDataUrl = 'data:image/svg+xml;base64,' + btoa(svgAvatar);
+            const preview = document.getElementById('fotoPreviewBox');
+            preview.src = appState.photoDataUrl;
+            preview.classList.remove('hidden');
+            document.getElementById('fotoPlaceholder').classList.add('hidden');
+            if (notify) showToast('Foto contoh formal telah dipasang.', 'info');
+        }
+
+        function fillSampleData() {
+            document.getElementById('inNama').value = 'H. Muhammad Arifin, S.Sos.';
+            document.getElementById('inNik').value = '3320091408850002';
+            document.getElementById('inHp').value = '081325678910';
+            document.getElementById('inTempatLahir').value = 'Jepara';
+            document.getElementById('inTglLahir').value = '1985-08-14';
+            document.getElementById('inGender').value = 'Laki-laki';
+            document.getElementById('inGoldar').value = 'O';
+            document.getElementById('inAlamat').value = 'Desa Kelet RT 04 / RW 02, Kec. Keling, Kab. Jepara, Jawa Tengah';
+            document.getElementById('inPekerjaan').value = 'Wiraswasta & Aktivis Sosial';
+            document.getElementById('inDivisi').value = 'Pemberdayaan Ekonomi Masyarakat';
+            document.getElementById('inCatatan').value = 'Kaos lengan panjang jika tersedia';
+            document.getElementById('inNominal').value = '150000';
+            useSampleAvatar(false);
+            showToast('Data contoh berhasil diisikan ke formulir!', 'info');
+        }
+
+        function collectFormData(validate = true) {
+            syncFormNumberLive();
+            const noFormulir = document.getElementById('inNoFormulir').value.trim();
+            const nama = document.getElementById('inNama').value.trim();
+            const nik = document.getElementById('inNik').value.trim();
+            const hp = document.getElementById('inHp').value.trim();
+            const tempatLahir = document.getElementById('inTempatLahir').value.trim();
+            const tglLahirRaw = document.getElementById('inTglLahir').value;
+            const gender = document.getElementById('inGender').value;
+            const goldar = document.getElementById('inGoldar').value;
+            const alamat = document.getElementById('inAlamat').value.trim();
+            const pekerjaan = document.getElementById('inPekerjaan').value.trim();
+            const divisi = document.getElementById('inDivisi').value.trim();
+            const nominal = parseInt(document.getElementById('inNominal').value || '150000', 10);
+            const catatan = document.getElementById('inCatatan').value.trim() || '-';
+
+            if (validate) {
+                if (!noFormulir) {
+                    showToast('Nomor Formulir / Nomor KTA tidak boleh kosong.', 'error');
+                    return false;
                 }
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function handleFormSubmit(event) {
-            event.preventDefault();
-            
-            // Gather values
-            globalFormData.nama = document.getElementById('nama').value;
-            globalFormData.nik = document.getElementById('nik').value;
-            globalFormData.ttl = document.getElementById('ttl').value;
-            globalFormData.gender = document.getElementById('gender').value;
-            globalFormData.goldar = document.getElementById('goldar').value;
-            globalFormData.alamat = document.getElementById('alamat').value;
-            globalFormData.phone = document.getElementById('phone').value;
-            globalFormData.pekerjaan = document.getElementById('pekerjaan').value;
-            globalFormData.divisi = document.getElementById('divisi').value;
-            globalFormData.nominal = document.getElementById('nominalBayar').value;
-            globalFormData.catatan = document.getElementById('catatan').value || '-';
-            
-            const selectedUkuran = document.querySelector('input[name="ukuranKaos"]:checked');
-            globalFormData.ukuran = selectedUkuran ? selectedUkuran.value : 'L';
-
-            if(!globalFormData.foto) {
-                globalFormData.foto = 'https://placehold.co/150x200/16a34a/ffffff?text=Pas+Foto';
+                if (!nama || !nik || !hp || !tempatLahir || !tglLahirRaw || !alamat || !pekerjaan || !divisi) {
+                    showToast('Mohon lengkapi seluruh kolom bertanda bintang (*).', 'error');
+                    return false;
+                }
+                if (!/^\d{16}$/.test(nik)) {
+                    showToast('NIK harus terdiri dari tepat 16 digit angka.', 'error');
+                    return false;
+                }
+                if (nominal < 150000) {
+                    showToast('Nominal pembayaran minimal adalah Rp 150.000,-', 'error');
+                    return false;
+                }
+                if (!appState.photoDataUrl) {
+                    showToast('Silakan unggah Pas Foto 3x4 terlebih dahulu.', 'error');
+                    return false;
+                }
             }
 
-            // Update nominal display in qris tab
-            document.getElementById('displayNominal').innerText = 'Rp ' + Number(globalFormData.nominal).toLocaleString('id-ID') + ',-';
+            // Format Tanggal Lahir ke Bahasa Indonesia
+            let tglFormatted = '';
+            if (tglLahirRaw) {
+                const d = new Date(tglLahirRaw);
+                tglFormatted = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            }
 
-            // Switch to QRIS tab
-            switchTab('qris');
+            const ukuranEl = document.querySelector('input[name="ukuranKaos"]:checked');
+            const ukuran = ukuranEl ? ukuranEl.value : 'L';
+
+            appState.data = {
+                noFormulir,
+                nama,
+                nik,
+                hp,
+                ttl: `${tempatLahir}, ${tglFormatted}`,
+                gender,
+                goldar,
+                alamat,
+                pekerjaan,
+                divisi,
+                nominal,
+                catatan,
+                ukuran,
+                reqKta: document.getElementById('chkKta').checked,
+                reqKaos: document.getElementById('chkKaos').checked,
+                reqTopi: document.getElementById('chkTopi').checked
+            };
+
+            syncDataToTemplates();
+            return true;
         }
 
-        function simulatePaymentSuccess() {
-            // Populate KTA & Results
-            document.getElementById('ktaNama').innerText = globalFormData.nama;
-            document.getElementById('ktaNik').innerText = globalFormData.nik;
-            document.getElementById('ktaDivisi').innerText = globalFormData.divisi;
-            document.getElementById('ktaFoto').src = globalFormData.foto;
+        function syncDataToTemplates() {
+            const d = appState.data;
+            const nominalRupiah = 'Rp ' + Number(d.nominal || 150000).toLocaleString('id-ID') + ',-';
 
-            document.getElementById('resNama').innerText = globalFormData.nama;
-            document.getElementById('signNama').innerText = globalFormData.nama;
-            document.getElementById('resNik').innerText = globalFormData.nik;
-            document.getElementById('resTtl').innerText = globalFormData.ttl;
-            document.getElementById('resGender').innerText = globalFormData.gender;
-            document.getElementById('resGoldar').innerText = globalFormData.goldar;
-            document.getElementById('resAlamat').innerText = globalFormData.alamat;
-            document.getElementById('resPhone').innerText = globalFormData.phone;
-            document.getElementById('resPekerjaan').innerText = globalFormData.pekerjaan;
-            document.getElementById('resDivisi').innerText = globalFormData.divisi;
-            document.getElementById('resUkuran').innerText = globalFormData.ukuran;
-            document.getElementById('resCatatan').innerText = globalFormData.catatan;
-            document.getElementById('resBayar').innerText = 'Rp ' + Number(globalFormData.nominal).toLocaleString('id-ID') + ',- (Lunas)';
-            document.getElementById('resFoto').src = globalFormData.foto;
+            // 1. Sync ke KTA Depan & Belakang
+            document.getElementById('badgeMemberNo').innerText = appState.memberNo;
+            document.getElementById('cardNoKta').innerText = appState.memberNo;
+            document.getElementById('ktaCardPhoto').src = appState.photoDataUrl;
+            document.getElementById('cardNama').innerText = d.nama || '-';
+            document.getElementById('cardNik').innerText = d.nik || '-';
+            document.getElementById('cardTtl').innerText = d.ttl || '-';
+            document.getElementById('cardGender').innerText = d.gender || '-';
+            document.getElementById('cardGoldar').innerText = d.goldar || '-';
+            document.getElementById('cardAlamat').innerText = d.alamat || '-';
+            document.getElementById('cardHp').innerText = d.hp || '-';
+            document.getElementById('cardPekerjaan').innerText = d.pekerjaan || '-';
 
-            // Generate small barcode for KTA
+            // Generate QR Code Verifikasi Anggota pada KTA Belakang
             new QRious({
-                element: document.getElementById('ktaBarCode'),
-                value: 'RPM-ID-' + globalFormData.nik,
-                size: 60,
-                background: 'white',
-                foreground: '#166534'
+                element: document.getElementById('ktaMemberQrCanvas'),
+                value: `VERIFIKASI KTA RESMI RPM\nNo. KTA / Formulir: ${appState.memberNo}\nNama: ${d.nama}\nNIK: ${d.nik}\nDivisi: ${d.divisi}\nStatus: AKTIF & TERVERIFIKASI`,
+                size: 160,
+                background: '#ffffff',
+                foreground: '#092e57',
+                level: 'M'
             });
 
-            // Switch to KTA & Success tab
-            switchTab('kta');
+            // 2. Sync ke Formulir A4 PDF
+            document.getElementById('pdfNoFormulir').innerText = appState.memberNo;
+            document.getElementById('pdfNama').innerText = d.nama || '';
+            document.getElementById('pdfNik').innerText = d.nik || '';
+            document.getElementById('pdfTtl').innerText = d.ttl || '';
+            document.getElementById('pdfGender').innerText = d.gender || '';
+            document.getElementById('pdfGoldar').innerText = d.goldar || '';
+            document.getElementById('pdfAlamat').innerText = d.alamat || '';
+            document.getElementById('pdfHp').innerText = d.hp || '';
+            document.getElementById('pdfPekerjaan').innerText = d.pekerjaan || '';
+            document.getElementById('pdfDivisi').innerText = d.divisi || '';
+            document.getElementById('pdfPhoto').src = appState.photoDataUrl;
+            document.getElementById('pdfCatatan').innerText = d.catatan || '-';
+            document.getElementById('pdfNominal').innerText = nominalRupiah;
+            document.getElementById('pdfSignNama').innerText = d.nama || '...........................................';
+
+            document.getElementById('pdfStatusLunas').innerText = appState.isPaid ? '[LUNAS VIA QRIS]' : '[MENUNGGU PEMBAYARAN]';
+
+            // Centang Permohonan
+            document.getElementById('pdfBoxKta').innerText = d.reqKta ? '✓' : '';
+            document.getElementById('pdfBoxKaos').innerText = d.reqKaos ? '✓' : '';
+            document.getElementById('pdfBoxTopi').innerText = d.reqTopi ? '✓' : '';
+
+            // Centang Ukuran Kaos
+            ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'].forEach(sz => {
+                document.getElementById('pdfSize' + sz).innerText = (d.ukuran === sz) ? '✓' : '';
+            });
         }
 
-        function downloadPDF() {
-            const element = document.getElementById('printArea');
-            const opt = {
-                margin:       10,
-                filename:     'Formulir_Pendaftaran_RPM_' + globalFormData.nama.replace(/\s+/g, '_') + '.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            html2pdf().from(element).set(opt).save();
+        // =========================================================================
+        // 6. SUBMIT KE TAHAP 2 (QRIS) & KONFIRMASI LUNAS
+        // =========================================================================
+        function submitFormToQris(event) {
+            event.preventDefault();
+            if (!collectFormData(true)) return;
+
+            const d = appState.data;
+            document.getElementById('qrisInvoice').innerText = appState.invoiceNo;
+            document.getElementById('qrisNoFormulir').innerText = appState.memberNo;
+            document.getElementById('qrisMemberName').innerText = d.nama;
+            document.getElementById('qrisAmountDisplay').innerText = 'Rp ' + d.nominal.toLocaleString('id-ID') + ',-';
+
+            // Generate QRIS Payload Dinamis
+            const qrisPayload = `00020101021226680016ID.CO.QRIS.WWW01189360091430000010303UMI0215${appState.invoiceNo}5204839853033605406${d.nominal}5802ID5925YAYASAN RPM JEPARA6006JEPARA6304`;
+            new QRious({
+                element: document.getElementById('qrisCodeCanvas'),
+                value: qrisPayload,
+                size: 200,
+                background: '#ffffff',
+                foreground: '#0f172a',
+                level: 'H'
+            });
+
+            startQrisCountdown(15 * 60);
+            navigateStep(2);
+            showToast('Silakan scan kode QRIS untuk menyelesaikan pendaftaran.', 'info');
+        }
+
+        function startQrisCountdown(seconds) {
+            if (countdownInterval) clearInterval(countdownInterval);
+            let remaining = seconds;
+            const display = document.getElementById('qrisCountdown');
+
+            countdownInterval = setInterval(() => {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                    display.innerText = '00:00';
+                    return;
+                }
+                const m = String(Math.floor(remaining / 60)).padStart(2, '0');
+                const s = String(remaining % 60).padStart(2, '0');
+                display.innerText = `${m}:${s}`;
+            }, 1000);
+        }
+
+        function confirmQrisPayment() {
+            const btn = document.getElementById('btnConfirmPayment');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Memverifikasi Transaksi QRIS...</span>`;
+
+            setTimeout(() => {
+                if (countdownInterval) clearInterval(countdownInterval);
+                appState.isPaid = true;
+                syncDataToTemplates();
+
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-circle-check text-lg"></i> <span>Simulasi Konfirmasi Pembayaran Lunas</span>`;
+
+                navigateStep(3);
+                showToast('Pembayaran QRIS Lunas! KTA Digital & Formulir PDF siap diunduh.', 'success');
+            }, 1100);
+        }
+
+        // =========================================================================
+        // 7. EKSPOR PDF & PNG RESOLUSI TINGGI (HTML2CANVAS + JSPDF)
+        // =========================================================================
+        async function downloadKtaPdf() {
+            showToast('Menyiapkan PDF Kartu Tanda Anggota (Depan & Belakang)...', 'info');
+            const { jsPDF } = window.jspdf;
+
+            const frontEl = document.getElementById('ktaFrontCard');
+            const backEl = document.getElementById('ktaBackCard');
+
+            const frontCanvas = await html2canvas(frontEl, { scale: 3, useCORS: true, backgroundColor: null });
+            const backCanvas = await html2canvas(backEl, { scale: 3, useCORS: true, backgroundColor: null });
+
+            // PDF A4 Portrait dengan KTA Depan & Belakang ukuran presisi CR80 (85.6mm x 53.98mm) siap cetak & potong
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(13);
+            pdf.setTextColor(12, 59, 110);
+            pdf.text('KARTU TANDA ANGGOTA (KTA) RESMI - YAYASAN RPM', 105, 18, { align: 'center' });
+
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(9);
+            pdf.setTextColor(100, 116, 139);
+            pdf.text(`Nama Anggota: ${appState.data.nama} | No. KTA / Formulir: ${appState.memberNo}`, 105, 24, { align: 'center' });
+
+            // Ukuran standar ID Card CR80 dalam mm
+            const cardW = 85.6;
+            const cardH = 53.98;
+            const xPos = (210 - cardW) / 2;
+
+            pdf.setFontSize(8);
+            pdf.setTextColor(51, 65, 85);
+            pdf.text('TAMPAK DEPAN (85.6mm x 53.98mm)', xPos, 35);
+            pdf.addImage(frontCanvas.toDataURL('image/png'), 'PNG', xPos, 37, cardW, cardH);
+
+            pdf.text('TAMPAK BELAKANG (85.6mm x 53.98mm)', xPos, 103);
+            pdf.addImage(backCanvas.toDataURL('image/png'), 'PNG', xPos, 105, cardW, cardH);
+
+            // Garis bantu potong (crop marks)
+            pdf.setDrawColor(180, 180, 180);
+            pdf.setLineDashPattern([1.5, 1.5], 0);
+            pdf.rect(xPos - 1, 36, cardW + 2, cardH + 2);
+            pdf.rect(xPos - 1, 104, cardW + 2, cardH + 2);
+
+            const cleanName = (appState.data.nama || 'Anggota').replace(/[^a-zA-Z0-9]/g, '_');
+            pdf.save(`KTA_RPM_${cleanName}.pdf`);
+            showToast('PDF KTA berhasil diunduh!', 'success');
+        }
+
+        async function downloadKtaPng() {
+            showToast('Merender gambar KTA HD...', 'info');
+            const captureEl = document.getElementById('ktaCaptureArea');
+            const canvas = await html2canvas(captureEl, { scale: 3, useCORS: true, backgroundColor: '#f8fafc' });
+
+            const link = document.createElement('a');
+            const cleanName = (appState.data.nama || 'Anggota').replace(/[^a-zA-Z0-9]/g, '_');
+            link.download = `KTA_RPM_HD_${cleanName}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast('Gambar KTA PNG HD berhasil disimpan!', 'success');
+        }
+
+        async function exportFormPdfDirectly() {
+            if (!collectFormData(false)) return;
+            await downloadFullFormPdf();
+        }
+
+        async function downloadFullFormPdf() {
+            showToast('Menghasilkan dokumen PDF Formulir A4...', 'info');
+            const { jsPDF } = window.jspdf;
+            const formEl = document.getElementById('a4FormPrintArea');
+
+            const canvas = await html2canvas(formEl, { scale: 2.5, useCORS: true, backgroundColor: '#ffffff' });
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+            const imgWidth = 210;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
+            const cleanName = (appState.data.nama || 'Pendaftar').replace(/[^a-zA-Z0-9]/g, '_');
+            pdf.save(`Formulir_RPM_${cleanName}.pdf`);
+            showToast('PDF Formulir Pendaftaran berhasil diunduh!', 'success');
+        }
+
+        function printDocuments() {
+            const printTarget = document.getElementById('print-target');
+            const ktaHtml = document.getElementById('ktaCaptureArea').outerHTML;
+            const formHtml = document.getElementById('a4FormPrintArea').outerHTML;
+
+            printTarget.innerHTML = `
+                <div style="padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; page-break-after: always;">
+                    <h2 style="font-family: Inter, sans-serif; font-weight: bold; color: #0c3b6e;">KARTU TANDA ANGGOTA (KTA) YAYASAN RPM</h2>
+                    ${ktaHtml}
+                </div>
+                <div>${formHtml}</div>
+            `;
+            printTarget.classList.remove('hidden');
+            window.print();
+            printTarget.classList.add('hidden');
         }
     </script>
 </body>
