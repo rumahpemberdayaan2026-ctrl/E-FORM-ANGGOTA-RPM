@@ -413,34 +413,97 @@
                         <span>Selesaikan pembayaran dalam <strong id="qrisCountdown" class="font-mono">14:59</strong></span>
                     </div>
 
-                    <!-- Bingkai QRIS -->
-                    <div class="bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-sm max-w-xs w-full mb-6 relative">
-                        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
-                            <span class="font-black text-lg tracking-tighter text-slate-800">QRIS</span>
-                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">GPN / Nasional</span>
-                        </div>
-                        <p class="text-xs font-extrabold text-slate-800 uppercase mb-1">YAYASAN RPM JEPARA</p>
-                        <p class="text-[10px] text-slate-400 font-mono mb-3">NMID: ID1026009812734</p>
-                        
-                        <div class="flex justify-center p-2 bg-white rounded-xl border border-slate-100">
-                            <canvas id="qrisCodeCanvas"></canvas>
-                        </div>
+                    <!-- Bingkai Poster QRIS Standar Nasional: ARJUNAJJAY - TELECOMMUNICATION -->
+                    <div class="bg-white border-2 border-slate-300 rounded-2xl shadow-lg max-w-[340px] w-full mb-5 relative overflow-hidden text-slate-900 select-none">
+                        <!-- Aksen Segitiga Merah Kiri & Kanan Bawah sesuai Poster Resmi -->
+                        <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 340 460" preserveAspectRatio="none">
+                            <!-- Pola latar abu-abu halus -->
+                            <rect width="340" height="460" fill="#ffffff"/>
+                            <polygon points="0,165 55,215 0,265" fill="#e62129"/>
+                            <polygon points="210,460 340,335 340,460" fill="#e62129"/>
+                        </svg>
 
-                        <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-center gap-2 text-[10px] text-slate-500 font-medium">
-                            <span>Mendukung:</span>
-                            <span class="font-bold text-blue-600">GoPay</span> •
-                            <span class="font-bold text-purple-600">OVO</span> •
-                            <span class="font-bold text-sky-500">DANA</span> •
-                            <span class="font-bold text-orange-500">ShopeePay</span> •
-                            <span class="font-bold text-slate-700">M-Banking</span>
+                        <div class="relative z-10 p-4 flex flex-col items-center">
+                            <!-- Header Logo QRIS & GPN -->
+                            <div class="w-full flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-1.5 text-left">
+                                    <span class="font-black text-2xl tracking-tighter text-slate-900 leading-none border-2 border-slate-900 px-1.5 py-0.5 rounded-sm">QRIS</span>
+                                    <div class="text-[8.5px] font-bold leading-tight text-slate-800">
+                                        QR Code Standar<br>Pembayaran Nasional
+                                    </div>
+                                </div>
+                                <!-- Logo GPN -->
+                                <div class="flex flex-col items-center">
+                                    <div class="w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center text-xs shadow-sm">
+                                        <i class="fa-solid fa-dove"></i>
+                                    </div>
+                                    <span class="text-[9px] font-black text-[#0c3b6e] tracking-tighter leading-none mt-0.5">GPN</span>
+                                </div>
+                            </div>
+
+                            <!-- Identitas Merchant Sesuai Lampiran -->
+                            <div class="text-center mb-2">
+                                <p class="text-sm font-black text-slate-900 uppercase leading-tight tracking-tight">
+                                    ARJUNAJJAY -<br>TELECOMMUNICATION
+                                </p>
+                                <p class="text-[11px] font-semibold text-slate-800 mt-1">
+                                    NMID : ID1021113879162
+                                </p>
+                                <p class="text-xs font-bold text-slate-900 mt-0.5">
+                                    A01
+                                </p>
+                            </div>
+
+                            <!-- Area Kode QR Merchant -->
+                            <div class="p-2.5 bg-white rounded-xl border border-slate-200 shadow-sm my-1 relative group">
+                                <canvas id="qrisCodeCanvas" class="mx-auto"></canvas>
+                                <img id="customQrisImage" src="" alt="QRIS ARJUNAJJAY" class="hidden w-[205px] h-[205px] object-contain mx-auto">
+                            </div>
+
+                            <!-- Keterangan Bawah Poster -->
+                            <div class="text-center mt-2">
+                                <p class="text-[11px] font-extrabold text-slate-900 tracking-wide">
+                                    SATU QRIS UNTUK SEMUA
+                                </p>
+                                <p class="text-[9px] text-slate-700 leading-tight mt-0.5">
+                                    Cek aplikasi penyelenggara<br>di: <span class="font-semibold">www.aspi-qris.id</span>
+                                </p>
+                            </div>
+
+                            <!-- Footer Info Pencetak & Panduan Singkat -->
+                            <div class="w-full flex items-end justify-between mt-4 pt-2 text-[8px]">
+                                <div class="text-left text-slate-700 font-medium leading-tight">
+                                    <p>Dicetak oleh : 93600918</p>
+                                    <p>Versi Cetak : 1.0-2026.03.10</p>
+                                </div>
+                                <div class="text-right text-white font-semibold leading-tight pr-0.5">
+                                    <p class="text-[7px] mb-0.5">Cara bayar dengan QRIS:</p>
+                                    <div class="flex items-center justify-end gap-1.5 text-[7px]">
+                                        <span class="bg-white/20 px-1 py-0.5 rounded">1. Buka App</span>
+                                        <span class="bg-white/20 px-1 py-0.5 rounded">2. Scan</span>
+                                        <span class="bg-white/20 px-1 py-0.5 rounded">3. Bayar</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- Opsi Upload / Ganti Gambar QRIS Asli Jika Diperlukan -->
+                    <div class="mb-5 flex items-center justify-center gap-3">
+                        <label class="cursor-pointer text-[11px] font-semibold text-[#0c3b6e] hover:text-emerald-700 bg-blue-50 hover:bg-emerald-50 border border-blue-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-qrcode"></i> Unggah File Gambar QRIS Asli (Opsional)
+                            <input type="file" accept="image/*" class="hidden" onchange="handleCustomQrisUpload(event)">
+                        </label>
+                        <button type="button" id="btnResetQrisCanvas" onclick="resetCustomQris()" class="hidden text-[11px] text-slate-500 hover:text-red-600 underline">
+                            Reset QR
+                        </button>
                     </div>
 
                     <!-- Tombol Konfirmasi Simulasi -->
                     <div class="w-full space-y-3">
                         <button onclick="confirmQrisPayment()" id="btnConfirmPayment" class="w-full py-3.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2">
                             <i class="fa-solid fa-circle-check text-lg"></i>
-                            <span>Simulasi Konfirmasi Pembayaran Lunas</span>
+                            <span>Konfirmasi Sudah Bayar (Lunas)</span>
                         </button>
                         <button onclick="navigateStep(1)" class="w-full py-2.5 px-4 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 font-semibold text-xs transition">
                             <i class="fa-solid fa-arrow-left mr-1"></i> Ubah Data Formulir
@@ -1277,12 +1340,12 @@
             document.getElementById('qrisMemberName').innerText = d.nama;
             document.getElementById('qrisAmountDisplay').innerText = 'Rp ' + d.nominal.toLocaleString('id-ID') + ',-';
 
-            // Generate QRIS Payload Dinamis
-            const qrisPayload = `00020101021226680016ID.CO.QRIS.WWW01189360091430000010303UMI0215${appState.invoiceNo}5204839853033605406${d.nominal}5802ID5925YAYASAN RPM JEPARA6006JEPARA6304`;
+            // Generate Payload QRIS Resmi Merchant ARJUNAJJAY - TELECOMMUNICATION (NMID: ID1021113879162)
+            const qrisPayload = `00020101021226670016ID.CO.QRIS.WWW0118936009180215ID10211138791620303A0151440014ID.CO.GPN.WWW0215ID10211138791620303UMI5204481453033605406${d.nominal}5802ID5925ARJUNAJJAY TELECOMMUNICAT6006JEPARA62230115${appState.invoiceNo}6304`;
             new QRious({
                 element: document.getElementById('qrisCodeCanvas'),
                 value: qrisPayload,
-                size: 200,
+                size: 205,
                 background: '#ffffff',
                 foreground: '#0f172a',
                 level: 'H'
@@ -1290,7 +1353,29 @@
 
             startQrisCountdown(15 * 60);
             navigateStep(2);
-            showToast('Silakan scan kode QRIS untuk menyelesaikan pendaftaran.', 'info');
+            showToast('Silakan scan kode QRIS ARJUNAJJAY - TELECOMMUNICATION untuk menyelesaikan pendaftaran.', 'info');
+        }
+
+        function handleCustomQrisUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = document.getElementById('customQrisImage');
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+                document.getElementById('qrisCodeCanvas').classList.add('hidden');
+                document.getElementById('btnResetQrisCanvas').classList.remove('hidden');
+                showToast('Gambar QRIS kustom berhasil ditampilkan!', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetCustomQris() {
+            document.getElementById('customQrisImage').classList.add('hidden');
+            document.getElementById('qrisCodeCanvas').classList.remove('hidden');
+            document.getElementById('btnResetQrisCanvas').classList.add('hidden');
+            showToast('Kembali ke QRIS otomatis merchant.', 'info');
         }
 
         function startQrisCountdown(seconds) {
@@ -1322,7 +1407,7 @@
                 syncDataToTemplates();
 
                 btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-circle-check text-lg"></i> <span>Simulasi Konfirmasi Pembayaran Lunas</span>`;
+                btn.innerHTML = `<i class="fa-solid fa-circle-check text-lg"></i> <span>Konfirmasi Sudah Bayar (Lunas)</span>`;
 
                 navigateStep(3);
                 showToast('Pembayaran QRIS Lunas! KTA Digital & Formulir PDF siap diunduh.', 'success');
